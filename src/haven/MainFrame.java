@@ -61,8 +61,9 @@ public class MainFrame extends java.awt.Frame implements Runnable, Console.Direc
     DisplayMode fsmode = null, prefs = null;
     public static final String TITLE = "ARD Unstable ???: Graveyard of Broken Clients";
 
-    static {
+    public static void initawt() {
         try {
+            System.setProperty("apple.awt.application.name", "Haven & Hearth");
             javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
 
             // Since H&H IPs aren't likely to change (at least mid client run), and the client constantly needs to fetch
@@ -72,6 +73,10 @@ public class MainFrame extends java.awt.Frame implements Runnable, Console.Direc
             java.security.Security.setProperty("networkaddress.cache.ttl", "-1");
         } catch (Exception e) {
         }
+    }
+
+    static {
+        initawt();
     }
 
     DisplayMode findmode(int w, int h) {

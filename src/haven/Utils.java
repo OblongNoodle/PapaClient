@@ -69,8 +69,11 @@ import java.lang.reflect.Type;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -342,6 +345,22 @@ public class Utils {
                         t.setRGB(x + c.x, y + c.y, p);
                 }
             }
+        }
+    }
+
+    public static URI uri(String uri) {
+        try {
+            return (new URI(uri));
+        } catch (URISyntaxException e) {
+            throw (new IllegalArgumentException(uri, e));
+        }
+    }
+
+    public static URL url(String url) {
+        try {
+            return (uri(url).toURL());
+        } catch (MalformedURLException e) {
+            throw (new IllegalArgumentException(url, e));
         }
     }
 
@@ -2098,6 +2117,19 @@ public class Utils {
         return (dst);
     }
 
+    public static byte[] concat(byte[]... parts) {
+        int n = 0;
+        for (byte[] p : parts)
+            n += p.length;
+        byte[] rv = new byte[n];
+        int o = 0;
+        for (byte[] p : parts) {
+            System.arraycopy(p, 0, rv, o, p.length);
+            o += p.length;
+        }
+        return (rv);
+    }
+
     public static <T> T el(Iterable<T> c) {
         Iterator<T> i = c.iterator();
         if (!i.hasNext()) return (null);
@@ -2317,6 +2349,32 @@ public class Utils {
         try {
             return (new URL(base.getProtocol(), base.getHost(), base.getPort(), file + buf.toString()));
         } catch (java.net.MalformedURLException e) {
+            throw (new RuntimeException(e));
+        }
+    }
+
+    public static URI uriparam(URI base, Object... pars) {
+        StringBuilder buf = new StringBuilder();
+        if (base.getRawQuery() != null)
+            buf.append(base.getRawQuery());
+        for (int i = 0; i < pars.length; i += 2) {
+            if (buf.length() > 0)
+                buf.append('&');
+            buf.append(urlencode(String.valueOf(pars[i])));
+            buf.append('=');
+            buf.append(urlencode(String.valueOf(pars[i + 1])));
+        }
+        try {
+            /* The component constructors for URI don't properly
+             * preserve quoted characters.
+             *
+             * It's all so tiresome. */
+            String sbase = base.toString();
+            int p = sbase.indexOf('?');
+            if (p >= 0)
+                sbase = sbase.substring(0, p);
+            return (new URI(sbase + '?' + buf.toString()));
+        } catch (URISyntaxException e) {
             throw (new RuntimeException(e));
         }
     }

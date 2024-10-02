@@ -375,7 +375,7 @@ public class HashDirCache implements ResCache {
         HashDirCache ret;
         try {
             if (Config.resurl != null)
-                return (get(Config.resurl.toURI()));
+                return (get(Config.resurl));
             return (get("default"));
         } catch (Exception e) {
             return (null);

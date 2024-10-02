@@ -48,6 +48,7 @@ import java.util.Properties;
 import java.util.Scanner;
 
 public class LoginScreen extends Widget {
+    public static final Config.Variable<String> authmech = Config.Variable.prop("haven.authmech", "native");
     public static Text.Foundry textf = new Text.Foundry(Text.sans, UI.scale(16)).aa(true);
     public static Text.Foundry textfs = new Text.Foundry(Text.sans, UI.scale(14)).aa(true);
     public static Text.Foundry special = new Text.Foundry(Text.latin, UI.scale(14)).aa(true);
@@ -55,6 +56,7 @@ public class LoginScreen extends Widget {
     Login cur;
     Text error;
     IButton btn;
+    Steambox steambox;
     Button statusbtn;
     Button optbtn;
     private TextEntry user;
@@ -391,6 +393,41 @@ public class LoginScreen extends Widget {
         }
     }
 
+    private static boolean steam_autologin = false;
+    public class Steambox extends Widget {
+
+        private Steambox() {
+            super(UI.scale(200, 150));
+            Widget prev = adda(new Label("Logging in with Steam", textf), sz.x / 2, 0, 0.5, 0);
+            adda(new IButton("gfx/hud/buttons/login", "u", "d", "o") {
+                     protected void depress() {ui.sfx(Button.lbtdown.stream());}
+                     protected void unpress() {ui.sfx(Button.lbtup.stream());}
+                     public void click() {enter();}
+                 },
+                    prev.pos("bl").adds(0, 10).x(sz.x / 2), 0.5, 0.0);
+        }
+
+        private AuthClient.Credentials creds() throws java.io.IOException {
+            return(new SteamCreds());
+        }
+
+        private void enter() {
+            try {
+                LoginScreen.this.wdgmsg("login", creds(), false);
+            } catch(java.io.IOException e) {
+                error(e.getMessage());
+            }
+        }
+
+        public void tick(double dt) {
+            super.tick(dt);
+            if(steam_autologin) {
+                enter();
+                steam_autologin = false;
+            }
+        }
+    }
+
     private void mklogin() {
         synchronized (ui) {
             adda(btn = new IButton("gfx/hud/buttons/login", "u", "d", "o") {
@@ -402,6 +439,7 @@ public class LoginScreen extends Widget {
                     Audio.play(Button.lbtup.stream());
                 }
             }, LoginScreen.this.sz.x / 2, LoginScreen.this.sz.y / 2 + UI.scale(100), 0.5, 0);
+            adda(steambox = new Steambox(), LoginScreen.this.sz.x, LoginScreen.this.sz.y, 1, 1);
             progress(null);
         }
     }

@@ -93,6 +93,10 @@ public class Loading extends RuntimeException implements Waitable {
         throw (new UnwaitableEvent(this));
     }
 
+    public boolean boostprio(int prio) {
+        return(false);
+    }
+
     private void queuewait() throws InterruptedException {
         boolean[] buf = {false};
         Waitable.Waiting[] wbuf = {null};
@@ -127,6 +131,7 @@ public class Loading extends RuntimeException implements Waitable {
             try {
                 return (x.get());
             } catch (Loading l) {
+                l.boostprio(10);
                 l.waitfor();
             }
         }

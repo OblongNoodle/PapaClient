@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -74,8 +75,8 @@ public class Config {
     public static String authuser = null;
     public static String authserv = null;
     public static String defserv = Config.Variable.prop("haven.defserv", "game.havenandhearth.com").get();
-    public static URL resurl = Config.Variable.propu("haven.resurl", "https://game.havenandhearth.com/hres/").get();
-    public static URL newresurl = Config.Variable.propu("haven.newresurl", "https://game.havenandhearth.com/res/").get();
+    public static URI resurl = Config.Variable.propu("haven.resurl", "https://game.havenandhearth.com/hres/").get();
+    public static URI newresurl = Config.Variable.propu("haven.newresurl", "https://game.havenandhearth.com/res/").get();
     public static boolean dbtext = false;
     public static boolean profile = false;
     public static boolean par = true;
@@ -100,7 +101,7 @@ public class Config {
 //    public static boolean vendanGreenMarkers = Utils.getprefb("vendan-mapv4-green-markers", false);
 //    public static boolean enableNavigationTracking = Utils.getprefb("enableNavigationTracking", false);
 //    public static boolean sendCustomMarkers = Utils.getprefb("sendCustomMarkers", false);
-    public static URL screenurl = Config.Variable.propu("haven.screenurl", "http://game.havenandhearth.com/mt/ss").get();
+    public static URI screenurl = Config.Variable.propu("haven.screenurl", "http://game.havenandhearth.com/mt/ss").get();
     public static boolean hideflocomplete = Utils.getprefb("hideflocomplete", false);
     public static boolean mapdrawparty = Utils.getprefb("mapdrawparty", false);
     public static boolean mapdrawquests = Utils.getprefb("mapdrawquests", true);
@@ -1477,6 +1478,12 @@ public class Config {
         }
     }
 
+    public static final URI parseuri(String url) {
+        if((url == null) || url.equals(""))
+            return(null);
+        return(Utils.uri(url));
+    }
+
     public static class Variable<T> {
         public final Function<Config, T> init;
         private boolean inited = false;
@@ -1537,12 +1544,12 @@ public class Config {
             return (prop(name, Utils::hex2byte, () -> defval));
         }
 
-        public static Variable<URL> propu(String name, URL defval) {
-            return (prop(name, Config::parseurl, () -> defval));
+        public static Variable<URI> propu(String name, URI defval) {
+            return (prop(name, Config::parseuri, () -> defval));
         }
 
-        public static Variable<URL> propu(String name, String defval) {
-            return (propu(name, parseurl(defval)));
+        public static Variable<URI> propu(String name, String defval) {
+            return (propu(name, parseuri(defval)));
         }
 
         public static Variable<Path> propp(String name, Path defval) {
@@ -1597,6 +1604,64 @@ public class Config {
         }
     }
 
+    public static class Services {
+        public static final Variable<URI> directory = Config.Variable.propu("haven.svcdir", "");
+        public final URI rel;
+        public final Properties props;
+
+        public Services(URI rel, Properties props) {
+            this.rel = rel;
+            this.props = props;
+        }
+
+        private static Services fetch(URI uri) {
+            Properties props = new Properties();
+            if(uri != null) {
+                Object[] data;
+                try {
+                    try(InputStream fp = Http.fetch(uri.toURL())) {
+                        data = new StreamMessage(fp).list();
+                    }
+                } catch(IOException exc) {
+                    throw(new RuntimeException(exc));
+                }
+                for(Object d : data) {
+                    Object[] p = (Object[])d;
+                    props.put(p[0], p[1]);
+                }
+            }
+            return(new Services(uri, props));
+        }
+
+        private static Services global = null;
+        public static Services get() {
+            if(global != null)
+                return(global);
+            synchronized(Services.class) {
+                if(global == null)
+                    global = fetch(directory.get());
+                return(global);
+            }
+        }
+
+        public URI geturi(String name) {
+            String val = props.getProperty(name);
+            if(val == null)
+                return(null);
+            return(rel.resolve(parseuri(val)));
+        }
+
+        public static Variable<URI> var(String name, String defval) {
+            URI def = parseuri(defval);
+            return new Variable<URI>(cfg -> {
+                String pv = cfg.getprop("haven." + name, null);
+                if(pv != null)
+                    return(parseuri(pv));
+                return(Services.get().geturi(name));
+            });
+        }
+    }
+
     private static void usage(PrintStream out) {
         out.println("usage: haven.jar [OPTIONS] [SERVER[:PORT]]");
         out.println("Options include:");
@@ -1637,12 +1702,7 @@ public class Config {
                     parsesvcaddr(opt.arg, s -> authserv = s, p -> authport = p);
                     break;
                 case 'U':
-                    try {
-                        resurl = new URL(opt.arg);
-                    } catch (java.net.MalformedURLException e) {
-                        System.err.println(e);
-                        System.exit(1);
-                    }
+                    resurl = parseuri(opt.arg);
                     break;
                 case 'u':
                     authuser = opt.arg;

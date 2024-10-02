@@ -390,59 +390,35 @@ public class Resource implements Serializable {
     }
 
     public static class HttpSource implements ResSource, Serializable {
-        private final transient SslHelper ssl;
-        public URL baseurl;
+        public URI base;
 
-        {
-            ssl = new SslHelper();
-            try {
-                ssl.trust(Resource.class.getResourceAsStream("ressrv.crt"));
-            } catch (java.security.cert.CertificateException e) {
-                throw (new Error("Invalid built-in certificate", e));
-            } catch (IOException e) {
-                throw (new Error(e));
-            }
-            ssl.ignoreName();
+        public HttpSource(URI base) {
+            dev.simpleLog("Base URL: " + base);
+            this.base = base;
         }
 
-        public HttpSource(URL baseurl) {
-            dev.simpleLog("Base URL: " + baseurl);
-            this.baseurl = baseurl;
-        }
-
-        private URL encodeurl(URL raw) throws IOException {
-            /* This is "kinda" ugly. It is, actually, how the Java
-             * documentation recommend that it be done, though... */
+        private URI encodeuri(URI raw) throws IOException {
+            /* This is kinda crazy, but it is, actually, how the Java
+             * documentation recommends that it be done... */
             try {
-                return (new URL(new URI(raw.getProtocol(), raw.getHost(), raw.getPath(), raw.getRef()).toASCIIString()));
-            } catch (URISyntaxException e) {
-                throw (new IOException(e));
+                return(new URI(new URI(raw.getScheme(), raw.getUserInfo(), raw.getHost(), raw.getPort(), raw.getPath(), raw.getQuery(), raw.getFragment()).toASCIIString()));
+            } catch(URISyntaxException e) {
+                throw(new IOException(e));
             }
         }
 
         @Override
         public InputStream get(String name) throws IOException {
-            URL resurl = encodeurl(new URL(baseurl, name + ".res"));
-            return (new RetryingInputStream() {
-                @Override
-                protected InputStream create() throws IOException {
-                    URLConnection c;
-                    if (resurl.getProtocol().equals("https"))
-                        c = ssl.connect(resurl);
-                    else
-                        c = resurl.openConnection();
-                    /* Apparently, some versions of Java Web Start has
-                     * a bug in its internal cache where it refuses to
-                     * reload a URL even when it has changed. */
-                    c.setUseCaches(false);
-                    c.addRequestProperty("User-Agent", "Haven/1.0");
-                    return (c.getInputStream());
-                }
-            });
+            return(Http.fetch(encodeuri(base.resolve(name + ".res")).toURL(), c -> {
+                /* Apparently, some versions of Java Web Start has
+                 * a bug in its internal cache where it refuses to
+                 * reload a URL even when it has changed. */
+                c.setUseCaches(false);
+            }));
         }
 
         public String toString() {
-            return ("HTTP res source (" + baseurl + ")");
+            return ("HTTP res source (" + base + ")");
         }
     }
 
@@ -470,8 +446,9 @@ public class Resource implements Serializable {
             }
         }
 
-        public void boostprio(int prio) {
+        public boolean boostprio(int prio) {
             res.boostprio(prio);
+            return (true);
         }
     }
 
@@ -890,13 +867,13 @@ public class Resource implements Serializable {
         return (_remote);
     }
 
-    public static Pool remote(String URL) throws MalformedURLException {
+    public static Pool remote(String uri) throws MalformedURLException {
         synchronized (Resource.class) {
-            return new Pool(new HttpSource(new URL(URL)));
+            return new Pool(new HttpSource(URI.create(uri)));
         }
     }
 
-    public static void addurl(URL url, ResCache cache) {
+    public static void addurl(URI url, ResCache cache) {
         ResSource src = new HttpSource(url);
         if (cache != null) {
             class Caching extends TeeSource {

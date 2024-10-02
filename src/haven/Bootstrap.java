@@ -169,7 +169,7 @@ public class Bootstrap implements UI.Receiver, UI.Runner {
                     if (msg.id == 1) {
                         if ("login".equals(msg.name)) {
                             creds = (AuthClient.Credentials) msg.args[0];
-                            nativecreds = (AuthClient.NativeCred) msg.args[0];
+//                            nativecreds = (AuthClient.NativeCred) msg.args[0];
                             savepw = (Boolean) msg.args[1];
                             loginname = creds.name();
                             break;
@@ -234,7 +234,7 @@ public class Bootstrap implements UI.Receiver, UI.Runner {
             break retry;
         } while (true);
 
-        if (creds != null) {
+        if (creds instanceof AuthClient.NativeCred) {
             LoginData ld = new LoginData(creds.name(), ((AuthClient.NativeCred) creds).pass);
             synchronized (Config.logins) {
                 if (!Config.logins.contains(ld)) {

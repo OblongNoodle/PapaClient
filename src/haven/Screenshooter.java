@@ -48,12 +48,13 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 public class Screenshooter extends Window {
     public static final ComponentColorModel outcm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[]{8, 8, 8}, false, false, ComponentColorModel.OPAQUE, DataBuffer.TYPE_BYTE);
     public static final PUtils.Convolution thumbflt = new PUtils.Lanczos(3);
-    public final URL tgt;
+    public final URI tgt;
     public final Shot shot;
     private final TextEntry comment;
     private final CheckBox decobox, pub;
@@ -61,7 +62,7 @@ public class Screenshooter extends Window {
     private Coord btnc;
     private Button btn;
 
-    public Screenshooter(URL tgt, Shot shot) {
+    public Screenshooter(URI tgt, Shot shot) {
         super(Coord.z, "Screenshot");
         this.tgt = tgt;
         this.shot = shot;
@@ -279,8 +280,8 @@ public class Screenshooter extends Window {
             byte[] data = buf.toByteArray();
             buf = null;
             setstate("Connecting...");
-            URL pared = Utils.urlparam(tgt, "p", pub.a ? "y" : "n");
-            HttpURLConnection conn = (HttpURLConnection) pared.openConnection();
+            URI pared = Utils.uriparam(tgt, "p", pub.a ? "y" : "n");
+            HttpURLConnection conn = (HttpURLConnection) pared.toURL().openConnection();
             conn.setDoOutput(true);
             conn.setFixedLengthStreamingMode(data.length);
             conn.addRequestProperty("Content-Type", fmt.ctype());
@@ -337,7 +338,7 @@ public class Screenshooter extends Window {
         btn = add(new Button(125, "Cancel", false, th::interrupt), btnc);
     }
 
-    public static void take(GameUI gameui, URL tgt) {
+    public static void take(GameUI gameui, URI tgt) {
         new Object() {
             BufferedImage map = null, ui = null;
 
