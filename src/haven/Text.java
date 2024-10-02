@@ -479,6 +479,11 @@ public class Text {
         return (tex);
     }
 
+    public void dispose() {
+        if(tex != null)
+            tex.dispose();
+    }
+
     public static void main(String[] args) throws Exception {
         String cmd = args[0].intern();
         if (cmd == "render") {

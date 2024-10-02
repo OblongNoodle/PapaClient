@@ -209,14 +209,26 @@ public class Resource implements Serializable {
     public interface Resolver {
         Indir<Resource> getres(int id);
 
+        public default Indir<Resource> dynres(UID uid) {
+            return(() -> {throw(new NoSuchResourceException(String.format("dyn/%x", uid.longValue()), 1, null));});
+        }
+
         default Indir<Resource> getresv(Object desc) {
             if (desc == null)
                 return (null);
+            if(desc instanceof UID)
+                return(dynres((UID)desc));
             if (desc instanceof Number) {
                 int id = ((Number) desc).intValue();
                 if (id < 0)
                     return (null);
-                return (this.getres(((Number) desc).intValue()));
+                return (this.getres(id));
+            }
+            if(desc instanceof Resource)
+                return(((Resource)desc).indir());
+            if(desc instanceof Indir) {
+                @SuppressWarnings("unchecked") Indir<Resource> ret = (Indir<Resource>)desc;
+                return(ret);
             }
             throw (new ClassCastException("unknown type for resource id: " + desc));
         }
@@ -262,6 +274,10 @@ public class Resource implements Serializable {
                 return (bk.getres(map.get(id)));
             }
 
+            public Indir<Resource> dynres(UID uid) {
+                return(bk.dynres(uid));
+            }
+
             public String toString() {
                 return (map.toString());
             }
@@ -277,6 +293,20 @@ public class Resource implements Serializable {
         this.name = name;
         this.ver = ver;
         this.realVer = realVer;
+    }
+
+    public static class Virtual extends Resource {
+        public Virtual(Pool pool, String name, int ver) {
+            super(pool, name, ver);
+        }
+
+        public Virtual(String name, int ver) {
+            this(remote(), name, ver);
+        }
+
+        public void add(Layer layer) {
+            layers.add(layer);
+        }
     }
 
     private void setRealVer(int ver) {
@@ -450,6 +480,63 @@ public class Resource implements Serializable {
             res.boostprio(prio);
             return (true);
         }
+    }
+
+    public static class BadResourceException extends RuntimeException {
+	public final String name;
+	public final int ver;
+
+	public BadResourceException(String name, int ver, String message, Throwable cause) {
+	    super(message, cause);
+	    this.name = name;
+	    this.ver = ver;
+	}
+
+	public BadResourceException(String name, int ver, String message) {
+	    this(name, ver, message, null);
+	}
+
+	public BadResourceException(String name, int ver, Throwable cause) {
+	    this(name, ver, null, cause);
+	}
+
+	public BadResourceException(String name, int ver) {
+	    this(name, ver, null, null);
+	}
+    }
+
+    public static class LoadFailedException extends BadResourceException {
+	public LoadFailedException(String name, int ver, LoadException cause) {
+	    super(name, ver, cause);
+	}
+
+	public String getMessage() {
+	    return(String.format("Failed to load resource %s (v%d)", name, ver));
+	}
+    }
+
+    public static class NoSuchResourceException extends LoadFailedException {
+	public NoSuchResourceException(String name, int ver, LoadException cause) {
+	    super(name, ver, cause);
+	}
+    }
+
+    public static class BadVersionException extends BadResourceException {
+	public final int curver;
+	public final String cursrc;
+
+	public BadVersionException(String name, int ver, int curver, ResSource cursrc) {
+	    super(name, ver);
+	    this.curver = curver;
+	    this.cursrc = (cursrc == null) ? null : String.valueOf(cursrc);
+	}
+
+	public String getMessage() {
+	    if(cursrc == null)
+		return(String.format("Obsolete version %d of %s requested, loaded version is %d", ver, name, curver));
+	    else
+		return(String.format("Obsolete version %d of %s requested, loaded version is %d, from %s", ver, name, curver, cursrc));
+	}
     }
 
     public static class Pool {
@@ -692,6 +779,10 @@ public class Resource implements Serializable {
 
         public Indir<Resource> dynres(long id) {
             return (load(String.format("dyn/%x", id), 1));
+        }
+
+        public Indir<Resource> dynres(UID id) {
+            return(dynres(id.bits));
         }
 
         private void ckld() {

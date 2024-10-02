@@ -38,6 +38,70 @@ public abstract class SListWidget<I, W extends Widget> extends Widget {
         }
     }
 
+    public static abstract class TextItem extends Widget {
+        public TextItem(Coord sz) {super(sz);}
+
+        protected abstract String text();
+
+        protected int margin() {return (-1);}
+
+        protected Text.Foundry foundry() {return (CharWnd.attrf);}
+
+        protected boolean valid(String text) {return (true);}
+
+        private Text.Line text = null;
+
+        protected void drawtext(GOut g) {
+            try {
+                if ((this.text == null) || !valid(text.text)) {
+                    String text = text();
+                    this.text = foundry().render(text);
+                    if (this.text.sz().x > sz.x) {
+                        int len = this.text.charat(sz.x - foundry().strsize("...").x);
+                        this.text = foundry().render(text.substring(0, len) + "...");
+                    }
+                }
+                int m = margin();
+                int y = (sz.y - this.text.sz().y) / 2;
+                g.image(this.text.tex(), Coord.of((m < 0) ? y : m, y));
+            } catch (Loading l) {
+                Tex missing = foundry().render("...").tex();
+                g.image(missing, Coord.of(UI.scale(5), (sz.y - missing.sz().y) / 2));
+                missing.dispose();
+            }
+        }
+
+        public void draw(GOut g) {
+            drawtext(g);
+        }
+
+        public void dispose() {
+            super.dispose();
+            invalidate();
+        }
+
+        public void invalidate() {
+            if (text != null) {
+                text.dispose();
+                text = null;
+            }
+        }
+
+        public static TextItem of(Coord sz, Text.Foundry fnd, Supplier<String> text) {
+            return (new TextItem(sz) {
+                public String text() {return (text.get());}
+
+                public Text.Foundry foundry() {return (fnd);}
+            });
+        }
+
+        public static TextItem of(Coord sz, Supplier<String> text) {
+            return (new TextItem(sz) {
+                public String text() {return (text.get());}
+            });
+        }
+    }
+
     public static abstract class IconText extends Widget {
         public IconText(Coord sz) {
             super(sz);

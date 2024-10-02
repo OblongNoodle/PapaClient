@@ -854,9 +854,8 @@ Window extends MovableWidget implements DTarget {
         super.mousemove(c);
     }
 
-    public boolean mousehover(Coord c) {
-        super.mousehover(c);
-        return (true);
+    public boolean mousehover(Coord c, boolean b) {
+        return (super.mousehover(c, b));
     }
 
     public void setDestroyHook(final Runnable r) {

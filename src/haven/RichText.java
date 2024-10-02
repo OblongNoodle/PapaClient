@@ -141,7 +141,7 @@ public class RichText extends Text {
             if (this.img == null) {
                 int tid = id == -1 ? 0 : id;
                 for (TexR tex : res.layers(TexR.class)) {
-                    if (tex.id == tid) {
+                    if (tex.layerid() == tid) {
                         this.img = tex.tex.fill();
                         this.imgscale = 1;
                         break;

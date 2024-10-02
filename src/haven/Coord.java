@@ -200,6 +200,10 @@ public class Coord implements Comparable<Coord>, java.io.Serializable {
         return new Coord(Math.max(x, d.x), Math.max(y, d.y));
     }
 
+    public Coord max(final int x, final int y) {
+        return new Coord(Math.max(x, this.x), Math.max(y, this.y));
+    }
+
     public Coord copy() {
         return new Coord(x, y);
     }

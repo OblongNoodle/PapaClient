@@ -45,6 +45,14 @@ public class TexR extends Resource.Layer implements Resource.IDLayer<Integer> {
     private final Coord off, sz;
     public final int id;
 
+    public TexR(Resource res, TexL tex, int id) {
+        res.super();
+        this.tex = tex;
+        this.id = id;
+        off = new Coord(0, 0);
+        sz = new Coord(0, 0);
+    }
+
     public TexR(Resource res, Message buf) {
         res.super();
         this.id = buf.int16();
@@ -184,5 +192,23 @@ public class TexR extends Resource.Layer implements Resource.IDLayer<Integer> {
         sb.append(tex());
         sb.append(">");
         return sb.toString();
+    }
+
+    public static class Image extends TexR {
+        public Image(Resource res, TexL tex, int id) {
+            super(res, tex, id);
+        }
+
+        public Image(Resource res, TexL tex) {
+            this(res, tex, -1);
+        }
+
+        public TexL tex() {
+            return (tex);
+        }
+
+        public Integer layerid() {
+            return (id);
+        }
     }
 }

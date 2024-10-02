@@ -255,6 +255,10 @@ public class Session implements Resource.Resolver {
         return (getres(id, 0));
     }
 
+    public Indir<Resource> dynres(UID uid) {
+        return(Resource.remote().dynres(uid));
+    }
+
     public int getresid(Resource res) {
         synchronized (rescache) {
             for (Map.Entry<Integer, CachedRes> entry : rescache.entrySet()) {

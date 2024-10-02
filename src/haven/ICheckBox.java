@@ -30,7 +30,7 @@ import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class ICheckBox extends Widget {
+public class ICheckBox extends ACheckBox {
     public final Tex up, down, hoverup, hoverdown;
     private final BufferedImage img;
     public boolean h, a;

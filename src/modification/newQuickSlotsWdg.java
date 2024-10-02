@@ -141,22 +141,24 @@ public class newQuickSlotsWdg extends MovableWidget implements DTarget {
     }
 
     @Override
-    public boolean mousehover(Coord c) {
-        Equipory e = ui.gui.getequipory();
-        if (e != null) {
-            WItem w = null;
-            for (int i = 0; i < 4; ++i) {
-                if (c.x <= (ssz.x + spz.x / 2) * items[i].slot) {
-                    w = e.quickslots[items[i].eqslot];
-                    break;
+    public boolean mousehover(Coord c, boolean b) {
+        if (b) {
+            Equipory e = ui.gui.getequipory();
+            if (e != null) {
+                WItem w = null;
+                for (int i = 0; i < 4; ++i) {
+                    if (c.x <= (ssz.x + spz.x / 2) * items[i].slot) {
+                        w = e.quickslots[items[i].eqslot];
+                        break;
+                    }
+                }
+                if (w != null) {
+                    w.mousehover(new Coord(w.sz.x / 2, w.sz.y / 2), b);
+                    return (true);
                 }
             }
-            if (w != null) {
-                w.mousehover(new Coord(w.sz.x / 2, w.sz.y / 2));
-                return (true);
-            }
         }
-        return (super.mousehover(c));
+        return (super.mousehover(c, b));
     }
 
     public void simulateclick(Coord c) {

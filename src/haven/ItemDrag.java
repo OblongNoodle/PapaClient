@@ -40,6 +40,7 @@ public class ItemDrag extends WItem {
         ui.grabmouse(this);
     }
 
+    @Override
     public void drawmain(GOut g, GSprite spr) {
         g.chcolor(255, 255, 255, 128);
         super.drawmain(g, spr);

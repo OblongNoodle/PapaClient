@@ -934,16 +934,19 @@ public class GItem extends AWidget implements ItemInfo.SpriteOwner, GSprite.Owne
         }
 
         @Override
-        public boolean mousehover(Coord c) {
-            super.mousehover(c);
-            int mods = ui.modflags();
-            if (!configuration.openStacksOnAlt) {
-                hovering = true;
-            } else if (mods == UI.MOD_META) {
-                hovering = false;
-                cont.createHovering(null);
+        public boolean mousehover(Coord c, boolean h) {
+            super.mousehover(c, h);
+            if (h) {
+                int mods = ui.modflags();
+                if (!configuration.openStacksOnAlt) {
+                    hovering = true;
+                } else if (mods == UI.MOD_META) {
+                    hovering = false;
+                    cont.createHovering(null);
+                }
+                return (true);
             }
-            return (true);
+            return (super.mousehover(c, h));
         }
     }
 

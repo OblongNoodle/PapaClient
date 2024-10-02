@@ -102,8 +102,10 @@ public class WItem extends Widget implements DTarget2 {
             return (item);
         }
 
+        @Override
         public List<ItemInfo> info() {return (info);}
 
+        @Override
         public Tex get() {
             return (tex);
         }
@@ -136,6 +138,7 @@ public class WItem extends Widget implements DTarget2 {
     private ItemTip shorttip = null, longtip = null, fulltip = null;
     private List<ItemInfo> ttinfo = null;
 
+    @Override
     public Object tooltip(Coord c, Widget prev) {
         double now = Utils.rtime();
         if (prev == this) {
@@ -310,6 +313,7 @@ public class WItem extends Widget implements DTarget2 {
     private GSprite lspr = null;
     private Widget lcont = null;
 
+    @Override
     public void tick(double dt) {
         /* XXX: This is ugly and there should be a better way to
          * ensure the resizing happens as it should, but I can't think
@@ -347,6 +351,7 @@ public class WItem extends Widget implements DTarget2 {
 
     private GItem.InfoOverlay<Tex> amountName;
 
+    @Override
     public void draw(GOut g) {
         GSprite spr = item.spr();
         if (spr != null) {
@@ -448,6 +453,7 @@ public class WItem extends Widget implements DTarget2 {
         g.chcolor();
     }
 
+    @Override
     public boolean mousedown(Coord c, int btn) {//TODO add invxf2
         if (btn == 1) {
             if (!locked) {
@@ -524,19 +530,23 @@ public class WItem extends Widget implements DTarget2 {
         return (true);
     }
 
-    public boolean mousehover(Coord c) {
+    @Override
+    public boolean mousehover(Coord c, boolean b) {
         int mods = ui.modflags();
-        if (item.contents != null) {
-            if (!configuration.openStacksOnAlt) {
-                item.hovering = this;
-            } else if (mods == UI.MOD_META) {
-                item.createHovering(this);
+        if (b) {
+            if (item.contents != null) {
+                if (!configuration.openStacksOnAlt) {
+                    item.hovering = this;
+                } else if (mods == UI.MOD_META) {
+                    item.createHovering(this);
+                }
+                return (true);
             }
-            return (true);
         }
-        return (super.mousehover(c));
+        return (super.mousehover(c, b));
     }
 
+    @Override
     public boolean drop(WItem target, Coord cc, Coord ul) {
         return (false);
     }
@@ -552,6 +562,7 @@ public class WItem extends Widget implements DTarget2 {
         this.destroycb = cb;
     }
 
+    @Override
     public boolean iteminteract(WItem target, Coord cc, Coord ul) {
         if (!configuration.newgildingwindow || !GildingWnd.processGilding(ui, this, target)) {
             item.wdgmsg("itemact", ui.modflags());
