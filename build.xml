@@ -71,6 +71,8 @@
                 <pathelement path="lib/javacord-api-3.0.4.jar"/>
                 <pathelement path="lib/javacord-core-3.0.4.jar"/>
 
+                <pathelement path="lib/steamworks/steamworks4j.jar"/>
+
             </classpath>
             <compilerarg value="-Xlint:unchecked"/>
             <compilerarg value="-Xlint:-options"/>
@@ -104,7 +106,7 @@
             <manifest>
                 <attribute name="Main-Class" value="haven.MainFrame"/>
                 <attribute name="Class-Path" value="jogl.jar gluegen-rt.jar amber-res.jar custom-res.jar l10n.jar HavenDiscord.jar rxjava-1.1.5.jar rxjava-1.1.5-javadoc.jar sqlite-jdbc-3.40.0.0.jar flogger-0.3.1.jar flogger-system-backend-0.3.1.jar
-jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3.0.2.jar abcl.jar abcl-contrib.jar javacord-api-3.0.4.jar javacord-core-3.0.4.jar py4j-0.10.9.2.jar"/>
+jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3.0.2.jar abcl.jar abcl-contrib.jar javacord-api-3.0.4.jar javacord-core-3.0.4.jar py4j-0.10.9.2.jar steamworks4j.jar"/>
             </manifest>
         </jar>
         <chmod file="build/hafen.jar" perm="a+x"/>
@@ -115,6 +117,22 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
              usetimestamp="true"/>
         <get src="http://game.havenandhearth.com/java/old-hafen-res.jar" dest="lib/hafen-res.jar"
              usetimestamp="true"/>
+    </target>
+
+    <target name="jar-launcher">
+        <mkdir dir="update"/>
+
+        <delete dir="update/classes"/>
+        <mkdir dir="update/classes"/>
+        <javac srcdir="steam-launcher/src" destdir="update/classes" debug="on" release="1.8"
+               includeantruntime="no" encoding="utf-8" bootclasspath="${boot-classpath}">
+        </javac>
+        <jar basedir="update/classes" destfile="update/launcher.jar" update="true">
+            <manifest>
+                <attribute name="Main-Class" value="Launch"/>
+            </manifest>
+        </jar>
+        <delete dir="update/classes"/>
     </target>
 
     <target name="l10n-jar" depends="build-env">
@@ -186,6 +204,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
                 <include name="javacord-core-3.0.4.jar"/>
             </fileset>
             <fileset dir="lib/jogl-natives" includes="*.jar"/>
+            <fileset dir="lib/steamworks" includes="*.jar"/>
         </copy>
         <copy file="etc/ansgar-config.properties" tofile="build/haven-config.properties" />
     </target>
@@ -208,6 +227,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
 <!--            <fileset dir="build" includes="grid_ids.txt"/>-->
             <fileset dir="${basedir}" includes="README, CHANGELOG.txt"/>
             <fileset dir="lib/jogl-natives" includes="*.jar"/>
+            <fileset dir="lib/steamworks" includes="*.jar"/>
             <fileset dir="etc" includes="*.bat,run.sh,run.command"/>
         </zip>
         <zip destfile="${basedir}/${name}-${version}-upd.zip" update="false">
@@ -253,6 +273,17 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
               fork="true"/>
     </target>
 
+    <target name="steam" depends="update_jars">
+        <echo>Steam Upload</echo>
+        <java classname="haven.SteamWorkshop" fork="true">
+            <arg line="upload update"/>
+            <classpath>
+                <pathelement location="update/build/hafen.jar"/>
+                <pathelement path="${java.class.path}"/>
+            </classpath>
+        </java>
+    </target>
+
     <target name="clean">
         <delete dir="build"/>
     </target>
@@ -291,6 +322,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
                 <include name="javacord-core-3.0.4.jar"/>
             </fileset>
             <fileset dir="lib/jogl-natives"/>
+            <fileset dir="lib/steamworks"/>
             <fileset dir="build">
                 <include name="hafen.jar"/>
                 <include name="custom-res.jar"/>
@@ -307,6 +339,12 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
             <fileset dir="build/classes">
                 <include name="CHANGELOG.txt"/>
             </fileset>
+            <fileset dir="etc">
+                <include name="launcher.hl"/>
+                <include name="logo.png"/>
+                <include name="steam_appid.txt"/>
+                <include name="workshop-client.properties"/>
+            </fileset>
         </copy>
         <copy todir="update/scripts">
             <fileset dir="scripts/"/>
@@ -317,6 +355,7 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
         <copy todir="update/bin">
             <fileset dir="bin/"/>
         </copy>
+        <antcall target="jar-launcher"/>
     </target>
 
     <target name="update" depends="prep-update">
