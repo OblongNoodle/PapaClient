@@ -122,17 +122,15 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
     <target name="jar-launcher">
         <mkdir dir="update"/>
 
-        <delete dir="update/classes"/>
-        <mkdir dir="update/classes"/>
-        <javac srcdir="steam-launcher/src" destdir="update/classes" debug="on" release="1.8"
+        <mkdir dir="build/classes"/>
+        <javac srcdir="steam-launcher/src" destdir="build/classes" debug="on" source="1.8" target="1.8"
                includeantruntime="no" encoding="utf-8" bootclasspath="${boot-classpath}">
         </javac>
-        <jar basedir="update/classes" destfile="update/launcher.jar" update="true">
+        <jar basedir="build/classes" destfile="update/launcher.jar" update="true">
             <manifest>
                 <attribute name="Main-Class" value="Launch"/>
             </manifest>
         </jar>
-        <delete dir="update/classes"/>
     </target>
 
     <target name="l10n-jar" depends="build-env">
