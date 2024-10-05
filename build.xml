@@ -122,11 +122,11 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
     <target name="jar-launcher">
         <mkdir dir="update"/>
 
-        <mkdir dir="build/classes"/>
-        <javac srcdir="steam-launcher/src" destdir="build/classes" debug="on" source="1.8" target="1.8"
+        <mkdir dir="build/classes-launcher"/>
+        <javac srcdir="steam-launcher/src" destdir="build/classes-launcher" debug="on" source="1.8" target="1.8"
                includeantruntime="no" encoding="utf-8" bootclasspath="${boot-classpath}">
         </javac>
-        <jar basedir="build/classes" destfile="update/launcher.jar" update="true">
+        <jar basedir="build/classes-launcher" destfile="update/launcher.jar" update="true">
             <manifest>
                 <attribute name="Main-Class" value="Launch"/>
             </manifest>
@@ -272,6 +272,17 @@ jackson-core.jar graal-sdk.jar graaljs.jar tregex.jar truffle-api.jar luaj-jse-3
     </target>
 
     <target name="steam" depends="update_jars">
+        <echo>Steam Upload</echo>
+        <java classname="haven.SteamWorkshop" fork="true">
+            <arg line="upload update"/>
+            <classpath>
+                <pathelement location="update/build/hafen.jar"/>
+                <pathelement path="${java.class.path}"/>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="steam-only">
         <echo>Steam Upload</echo>
         <java classname="haven.SteamWorkshop" fork="true">
             <arg line="upload update"/>
