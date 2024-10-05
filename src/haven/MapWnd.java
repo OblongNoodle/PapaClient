@@ -1311,7 +1311,9 @@ public class MapWnd extends ResizableWnd {
         }
     }
 
+    public static boolean disableTicks = false;
     public void tick(double dt) {
+        if (disableTicks) return;
         super.tick(dt);
         if (Config.mapdrawparty)
             resolveNames();

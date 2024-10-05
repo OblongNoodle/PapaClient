@@ -37,7 +37,6 @@ import java.util.NoSuchElementException;
 
 public class HashMultiMap<K, V> {
     private final HashMap<K, Object> bk = new HashMap<>();
-    private int size = 0;
 
     private static class TaggedList<T> extends ArrayList<T> {
     }
@@ -58,7 +57,6 @@ public class HashMultiMap<K, V> {
         } else {
             bk.put(key, value);
         }
-        size++;
     }
 
     @SuppressWarnings("unchecked")
@@ -72,11 +70,9 @@ public class HashMultiMap<K, V> {
             ret = ls.remove(value) ? value : null;
             if (ls.size() == 1)
                 bk.put(key, ls.get(0));
-            size--;
         } else if (cur != null) {
             bk.remove(key);
             ret = (V) cur;
-            size--;
         } else {
             ret = null;
         }
@@ -88,10 +84,8 @@ public class HashMultiMap<K, V> {
         Object prev = bk.remove(key);
         if (prev instanceof TaggedList) {
             TaggedList<V> ls = (TaggedList<V>) prev;
-            size -= ls.size();
             return (ls);
         } else if (prev != null) {
-            size--;
             return (Collections.singletonList((V) prev));
         } else {
             return (Collections.emptyList());
@@ -109,11 +103,9 @@ public class HashMultiMap<K, V> {
             ls.remove(n);
             if (n == 1)
                 bk.put(key, ls.get(0));
-            size--;
         } else if (cur != null) {
             bk.remove(key);
             ret = (V) cur;
-            size--;
         } else {
             ret = null;
         }
@@ -141,7 +133,7 @@ public class HashMultiMap<K, V> {
     }
 
     public int size() {
-        return (size);
+        return (bk.values().stream().mapToInt(v -> v instanceof TaggedList ? ((TaggedList) v).size() : 1).sum());
     }
 
     private Collection<V> values = null;
@@ -150,7 +142,7 @@ public class HashMultiMap<K, V> {
         if (values == null) {
             values = new AbstractCollection<V>() {
                 public int size() {
-                    return (size);
+                    return (HashMultiMap.this.size());
                 }
 
                 public Iterator<V> iterator() {

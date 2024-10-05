@@ -2055,12 +2055,15 @@ public class MapFile {
 
     private void merge(Segment dst, Segment src, Coord soff) {
         checklock();
+        int count = src.map.size();
         for (Map.Entry<Coord, Long> gi : src.map.entrySet()) {
+            count--;
             long id = gi.getValue();
             Coord sc = gi.getKey();
             Coord dc = sc.sub(soff);
             dst.include(id, dc);
             gridinfo.put(id, new GridInfo(id, dst.id, dc));
+            Debug.println("Merge: " + src.id + "->" + dst.id + " Left: " + count);
         }
         boolean mf = false;
         for (Marker mark : markers) {

@@ -856,9 +856,12 @@ public class Widget {
         }
         /* It would be very nice to do these things in harmless mix-in
          * classes, but alas, this is Java. */
-        anims.addAll(nanims);
-        nanims.clear();
-        anims.removeIf(anim -> anim.tick(dt));
+        if (!nanims.isEmpty()) {
+            anims.addAll(nanims);
+            nanims.clear();
+        }
+        if (!anims.isEmpty())
+            anims.removeIf(anim -> anim.tick(dt));
     }
 
     public void draw(GOut g, boolean strict) {

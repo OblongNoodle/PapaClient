@@ -4533,6 +4533,7 @@ public class OptWnd extends Window {
             }
         });
         appender.add(new CheckBox("Map debug log", val -> Utils.setprefb("mapdebug", MapFile.debug = val), MapFile.debug));
+        appender.add(new CheckBox("Disable map ticks", val -> MapWnd.disableTicks = val, MapWnd.disableTicks));
         appender.add(new IndirCheckBox("Debug sloth pathfinding", DEBUG));
         appender.add(new CheckBox("Debug purus pathfinding") {
             {
