@@ -167,6 +167,8 @@ public class FallingLeaves extends GlobEffect {
         int vi = 0, vo = 0;
         for (int i = 0; i < nl; i++, vi += 4, vo += 12) {
             Leaf l = leaves[i];
+            if (l == null)
+                continue;
             float sz = l.size();
             try {
                 spos[vo + 0] = l.x + sz * l.nz;
@@ -206,6 +208,8 @@ public class FallingLeaves extends GlobEffect {
         Coord3f av = Environ.get(glob).wind();
         for (int i = 0; i < nl; i++) {
             Leaf l = leaves[i];
+            if (l == null)
+                continue;
             float xvd = l.xv - av.x, yvd = l.yv - av.y, zvd = l.zv - av.z;
             float vel = (float) Math.sqrt((xvd * xvd) + (yvd * yvd) + (zvd * zvd));
 
@@ -250,10 +254,11 @@ public class FallingLeaves extends GlobEffect {
     void ckstop(Glob glob) {
         for (int i = 0; i < nl; i++) {
             Leaf l = leaves[i];
+            if (l == null)
+                continue;
             boolean drop = false;
             try {
-                if (l != null)
-                    drop = l.z < glob.map.getcz(leaves[i].x, -leaves[i].y) - 1;
+                drop = l.z < glob.map.getcz(l.x, -l.y) - 1;
             } catch (Loading e) {
                 drop = true;
             }
