@@ -751,7 +751,7 @@ public class Widget {
         } else if (msg == "focus") {
             int tid = (Integer) args[0];
             if (tid < 0) {
-                setfocus(null);
+//                setfocus(null);
             } else {
                 Widget w = ui.widgets.get(tid);
                 if (w != null) {
