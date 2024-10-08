@@ -475,7 +475,7 @@ public class FlowerMenu extends Widget {
     }
 
     public void choose(Petal option) {
-        if (ui.gui.petalClickCallback != null) {
+        if (ui.gui != null && ui.gui.petalClickCallback != null) {
             ui.gui.petalClickCallback.petalClick(option);
             return;
         }
