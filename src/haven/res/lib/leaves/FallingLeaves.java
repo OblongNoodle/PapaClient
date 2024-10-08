@@ -249,9 +249,11 @@ public class FallingLeaves extends GlobEffect {
 
     void ckstop(Glob glob) {
         for (int i = 0; i < nl; i++) {
+            Leaf l = leaves[i];
             boolean drop = false;
             try {
-                drop = leaves[i].z < glob.map.getcz(leaves[i].x, -leaves[i].y) - 1;
+                if (l != null)
+                    drop = l.z < glob.map.getcz(leaves[i].x, -leaves[i].y) - 1;
             } catch (Loading e) {
                 drop = true;
             }
