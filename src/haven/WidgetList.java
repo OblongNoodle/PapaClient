@@ -85,6 +85,7 @@ public class WidgetList<T extends Widget> extends ListWidget<T> {
 
         int n = listitems();
         sb.max = n - h;
+        sb.move(Coord.of(sz.x, xlate(Coord.z, false).y));
         Coord isz = sb.vis() ? itemsz : widesz;
         for (int i = 0; i < h; i++) {
             int idx = i + sb.val;
@@ -100,7 +101,8 @@ public class WidgetList<T extends Widget> extends ListWidget<T> {
             drawitem(ig, item, idx);
         }
 
-        sb.draw(g.reclip(xlate(sb.c, true), sb.sz));
+//        sb.draw(g.reclip(sb.c, sb.sz));
+        super.draw(g);
     }
 
     @Override
