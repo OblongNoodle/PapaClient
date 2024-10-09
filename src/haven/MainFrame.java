@@ -460,7 +460,7 @@ public class MainFrame extends java.awt.Frame implements Runnable, Console.Direc
         DefSettings.init(); //init after res has been setup...
         try {
             if (Config.autoconnectdiscord)
-                PBotDiscord.initalize();
+                new Thread(PBotDiscord::initalize).start();
         } catch (Exception e) {
 //            e.printStackTrace();
         }
