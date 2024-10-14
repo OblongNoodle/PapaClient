@@ -314,6 +314,7 @@ public class LocalMiniMap extends Widget {
     }
 
     private Tex qtex = Window.cf.render("?").tex();
+
     public void drawicons(GOut g) {
         OCache oc = ui.sess.glob.oc;
         List<Gob> dangergobs = new ArrayList<>();
@@ -392,8 +393,13 @@ public class LocalMiniMap extends Widget {
                         stage = gob.getattr(ResDrawable.class).sdt.peekrbuf(0);
                     if (stage == 10 || stage == 14)
                         g.image(dooricn, p2c(gob.rc).sub(dooricn.sz().div(2)).add(delta));
-                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null) {
+                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && gob.name().contains("items")) {
+                    double d = Utils.rtime() % 2;
+                    if (d > 1)
+                        d = 2 - d;
+                    g.chcolor(128 + (int) (d * (255 - 128)), (int) (d * 255), (int) (d * 255), 255);
                     g.image(qtex, p2c(gob.rc).sub(qtex.sz().div(2)).add(delta));
+                    g.chcolor();
                 }
 
                 if (sgobs.contains(gob.id))
@@ -533,8 +539,7 @@ public class LocalMiniMap extends Widget {
                             if (itm == null || !itm.selected) {
                                 return gob;
                             }
-                        }*/
-                        else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null) {
+                        }*/ else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && gob.name().contains("items")) {
                             return gob;
                         }
                     }

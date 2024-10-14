@@ -328,7 +328,7 @@ public class configuration {
     public static boolean boostspeedbox = Utils.getprefb("boostspeedbox", true);
     public static boolean showlinmove = Utils.getprefb("showlinmove", true);
     public static boolean simpledraging = Utils.getprefb("simpledraging", true);
-    public static boolean showUniconedItemsIcon = Utils.getprefb("showUniconedItemsIcon", false);
+    public static boolean showUniconedItemsIcon = Utils.getprefb("showUniconedItemsIcon", true);
 
     public static boolean disablepavingoutlineonmap = Utils.getprefb("disablepavingoutlineonmap", false);
 
