@@ -263,7 +263,11 @@ public class OCache implements Iterable<Gob> {
     }
 
     public synchronized Gob getgob(long id) {
-        return (objs.get(id));
+        for (final Gob g : this) {
+            if (g.id == id)
+                return (g);
+        }
+        return (null);
     }
 
     private AtomicLong nextvirt = new AtomicLong(-1);
