@@ -313,6 +313,7 @@ public class LocalMiniMap extends Widget {
         return (c.sub(sz.div(2)).div(zoom).add(cc).mul(tilesz).add(tilesz.div(2)));
     }
 
+    private Tex qtex = Window.cf.render("?").tex();
     public void drawicons(GOut g) {
         OCache oc = ui.sess.glob.oc;
         List<Gob> dangergobs = new ArrayList<>();
@@ -391,6 +392,8 @@ public class LocalMiniMap extends Widget {
                         stage = gob.getattr(ResDrawable.class).sdt.peekrbuf(0);
                     if (stage == 10 || stage == 14)
                         g.image(dooricn, p2c(gob.rc).sub(dooricn.sz().div(2)).add(delta));
+                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null) {
+                    g.image(qtex, p2c(gob.rc).sub(qtex.sz().div(2)).add(delta));
                 }
 
                 if (sgobs.contains(gob.id))
@@ -531,6 +534,9 @@ public class LocalMiniMap extends Widget {
                                 return gob;
                             }
                         }*/
+                        else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null) {
+                            return gob;
+                        }
                     }
                 }
 

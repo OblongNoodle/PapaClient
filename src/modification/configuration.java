@@ -15,10 +15,12 @@ import haven.Gob;
 import haven.GobHitbox;
 import haven.HSliderListboxItem;
 import haven.HSliderNamed;
+import haven.LimitMessage;
 import haven.MainFrame;
 import haven.MapFile;
 import haven.Matrix4f;
 import haven.Message;
+import haven.MessageBuf;
 import haven.OCache;
 import haven.PUtils;
 import haven.Pair;
@@ -326,6 +328,7 @@ public class configuration {
     public static boolean boostspeedbox = Utils.getprefb("boostspeedbox", true);
     public static boolean showlinmove = Utils.getprefb("showlinmove", true);
     public static boolean simpledraging = Utils.getprefb("simpledraging", true);
+    public static boolean showUniconedItemsIcon = Utils.getprefb("showUniconedItemsIcon", true);
 
     public static boolean disablepavingoutlineonmap = Utils.getprefb("disablepavingoutlineonmap", false);
 
@@ -1012,9 +1015,11 @@ public class configuration {
         }
     }
 
-    public static void saveResource(Resource res, Message msg) {
+    public static void saveResource(Resource res, MessageBuf in) {
         if (dev.decodeCode) {
-            int hash = msg.hashCode();
+            Message resMsg = in.clone();
+            Message layersMsg = in.clone();
+            int hash = resMsg.hashCode();
             Path dir = Paths.get("decode" + File.separator + res.toString().replace("/", File.separator));
             String filename = res.name.substring(res.name.lastIndexOf('/') + 1) + "_" + hash + ".res";
             Path file = dir.resolve(filename);
@@ -1022,7 +1027,26 @@ public class configuration {
                 new Thread(() -> {
                     try {
                         Files.createDirectories(dir);
-                        Files.write(file, msg.bytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                        Files.write(file, resMsg.bytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                        byte[] sig = "Haven Resource 1".getBytes(Utils.ascii);
+                        layersMsg.bytes(sig.length);
+                        layersMsg.uint16();
+
+                        while (!layersMsg.eom()) {
+                            String title = layersMsg.string();
+                            int len = layersMsg.int32();
+
+                            Message buf = new LimitMessage(layersMsg, len);
+                            int lhash = buf.hashCode();
+                            String lfilename = res.name.substring(res.name.lastIndexOf('/') + 1) + "_" + lhash + "." + title;
+                            Path lfile = dir.resolve(lfilename);
+
+                            Files.write(lfile, buf.bytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                            dev.resourceLog("resource", lfile, "CREATED");
+
+                            buf.skip();
+                        }
 
                         dev.resourceLog("resource", file, "CREATED");
                     } catch (IOException e) {

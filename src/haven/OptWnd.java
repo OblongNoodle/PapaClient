@@ -1799,6 +1799,7 @@ public class OptWnd extends Window {
                 a = val;
             }
         });
+        appender2.add(new CheckBox("Show another items on minimap (?)", val -> Utils.setprefb("showUniconedItemsIcon", configuration.showUniconedItemsIcon = val), configuration.showUniconedItemsIcon));
 
         appender2.add(new Label(""));
         appender2.add(new Label("Map"));
