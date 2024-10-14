@@ -439,7 +439,7 @@ public abstract class TexGL extends Tex {
             final boolean clip = tclip; /* ¦] */
             return (new Material.Res.Resolver() {
                 public void resolve(Collection<GLState> buf) {
-                    Tex tex;
+                    Tex tex = null;
                     TexR rt = tres.get().layer(TexR.class, tid);
                     if (rt != null) {
                         tex = rt.tex();
@@ -448,12 +448,14 @@ public abstract class TexGL extends Tex {
                         if (img != null) {
                             tex = img.tex();
                         } else {
-                            throw (new RuntimeException(String.format("Specified texture %d for %s not found in %s", tid, res, tres)));
+//                            throw (new RuntimeException(String.format("Specified texture %d for %s not found in %s", tid, res, tres)));
                         }
                     }
-                    buf.add(tex.draw());
-                    if (clip)
-                        buf.add(tex.clip());
+                    if (tex != null) {
+                        buf.add(tex.draw());
+                        if (clip)
+                            buf.add(tex.clip());
+                    }
                 }
             });
         }

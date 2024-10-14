@@ -41,8 +41,8 @@ public class Factory implements Sprite.Factory {
         Collection<Material> m = new ArrayList<>();
         for (Material.Res mr : mats.layers(Material.Res.class))
             m.add(mr.get());
-        if (m.isEmpty())
-            throw (new RuntimeException("No leaf materials"));
+//        if (m.isEmpty())
+//            throw (new RuntimeException("No leaf materials"));
         leaves.mat = m.toArray(new Material[0]);
         this.leaves = leaves;
     }

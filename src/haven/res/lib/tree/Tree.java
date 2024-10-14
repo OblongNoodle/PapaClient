@@ -185,8 +185,10 @@ public class Tree extends Sprite {
             try {
                 if ((loc != null) && (lrand.nextDouble() > Math.pow(lrate, dt))) {
                     FallingLeaves fx = FallingLeaves.get(((Gob) owner).glob);
-                    Material mat = leaves.mat[lrand.nextInt(leaves.mat.length)];
-                    fx.addleaf(new StdLeaf(fx, fx.onevertex(loc, leaves.mesh), mat));
+                    if (leaves.mat.length > 0) {
+                        Material mat = leaves.mat[lrand.nextInt(leaves.mat.length)];
+                        fx.addleaf(new StdLeaf(fx, fx.onevertex(loc, leaves.mesh), mat));
+                    }
                 }
             } catch (Loading e) {
             }

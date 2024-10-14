@@ -2006,7 +2006,9 @@ public class Resource implements Serializable {
                         if (!classpath.isEmpty()) {
                             Collection<ClassLoader> loaders = new LinkedList<>();
                             for (Indir<Resource> res : classpath) {
-                                loaders.add(res.get().layer(CodeEntry.class).loader());
+                                CodeEntry ce = res.get().layer(CodeEntry.class);
+                                if (ce != null)
+                                    loaders.add(ce.loader());
                             }
                             ret = new LibClassLoader(ret, loaders);
                         }
