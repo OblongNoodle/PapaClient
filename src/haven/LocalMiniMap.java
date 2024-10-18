@@ -393,7 +393,7 @@ public class LocalMiniMap extends Widget {
                         stage = gob.getattr(ResDrawable.class).sdt.peekrbuf(0);
                     if (stage == 10 || stage == 14)
                         g.image(dooricn, p2c(gob.rc).sub(dooricn.sz().div(2)).add(delta));
-                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && gob.name().contains("items")) {
+                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && (gob.name().contains("items") || !gob.name().contains("terobjs"))) {
                     double d = Utils.rtime() % 2;
                     if (d > 1)
                         d = 2 - d;
@@ -539,7 +539,7 @@ public class LocalMiniMap extends Widget {
                             if (itm == null || !itm.selected) {
                                 return gob;
                             }
-                        }*/ else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && gob.name().contains("items")) {
+                        }*/ else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && (gob.name().contains("items") || !gob.name().contains("terobjs"))) {
                             return gob;
                         }
                     }
