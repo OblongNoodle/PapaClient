@@ -170,6 +170,12 @@ public class Charlist extends Widget {
         parent.add(btn, UI.scale(120), parent.sz.y - UI.scale(50));
     }
 
+    @Override
+    public void destroy() {
+        super.destroy();
+        ui.charlist = null;
+    }
+
     private int scrolltgt = -1;
     private double scrollval = -1;
 

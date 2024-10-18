@@ -1,8 +1,11 @@
 package haven.purus.pbot;
 
+import haven.AuthClient;
+import haven.Charlist;
 import haven.ChatUI;
 import haven.Coord2d;
 import haven.Equipory;
+import haven.LoginScreen;
 import haven.UI;
 import haven.WItem;
 import haven.Widget;
@@ -131,7 +134,11 @@ public class PBotCharacterAPI {
      * @param charname Name of the character
      */
     public static void loginChar(UI ui, String charname) {
-        ui.charlist.wdgmsg("play", charname);
+        Charlist chl = ui.charlist;
+        if (chl != null)
+            chl.wdgmsg("play", charname);
+        else
+            System.err.println("Charlist not found");
     }
 
 //    public static void loginChar(String charname) {
@@ -212,5 +219,41 @@ public class PBotCharacterAPI {
                 ret.add(new PBotItem(itm));
         }
         return ret;
+    }
+
+    /**
+     * Send message for auth in main screen
+     *
+     * @param user     Name of the acc, for example "admin"
+     * @param pass      Pass of the acc, for example "admin"
+     */
+    public static void loginUserPass(UI ui, String user, String pass) {
+        LoginScreen login = ui.root.findchild(LoginScreen.class);
+        if (login != null)
+            login.wdgmsg("login", new AuthClient.NativeCred(user, pass), false);
+        else
+            System.err.println("LoginScreen not found");
+    }
+
+    /**
+     * Checks state (checks availability LoginScreen)
+     */
+    public static boolean isOnLoginScreen(UI ui) {
+        LoginScreen login = ui.root.findchild(LoginScreen.class);
+        if (login != null)
+            return (true);
+        return (false);
+    }
+
+    /**
+     * Checks state (checks availability choice a character)
+     *
+     * @see #loginChar
+     */
+    public static boolean isOnCharSelectScreen(UI ui) {
+        Charlist chl = ui.charlist;
+        if (chl != null)
+            return (true);
+        return (false);
     }
 }
