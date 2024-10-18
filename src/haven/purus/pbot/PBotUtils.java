@@ -2025,16 +2025,23 @@ public class PBotUtils {
         item.item.wdgmsg("transfer", Coord.z, n);
     }
 
-    public void transfer_identical(WItem item) {
+    public static void transfer_identical(WItem item) {
         item.wdgmsg("transfer-identical", item.item);
     }
 
-    public void transfer_identical_eq(WItem item) {
+    public static void transfer_identical_eq(WItem item) {
         item.wdgmsg("transfer-identical-eq", item.item);
     }
 
-    public void drop_identical(WItem item) {
+    public static void drop_identical(WItem item) {
         item.wdgmsg("drop-identical", item.item);
+    }
+
+    /**
+     * Checks is GameUI available after login char
+     */
+    public static boolean isGameAvailable(final UI ui) {
+        return (ui.gui != null && ui.gui.parent != null);
     }
 
 
