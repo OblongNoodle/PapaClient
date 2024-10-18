@@ -95,8 +95,10 @@ public class CheckBox extends Widget {
     }
 
     public void click() {
-        set(!a);
+        click.run();
     }
+    public Runnable click = () -> set(!a);
+    public CheckBox click(Runnable click) {this.click = click; return(this);}
 
     public void draw(GOut g) {
         final int id = a ? 1 : 0;
