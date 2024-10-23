@@ -36,10 +36,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 public class FoodService {
-    public static final String API_ENDPOINT = Utils.getpref("food_service_endpoint_api", "https://food.hearthlands.net/api/");
-    private static final String FOOD_DATA_URL = Utils.getpref("food_service_data_url", "https://food.hearthlands.net/api/data/food-info.json");
+    private static final String DEFAULT_SERVICE_URL = "https://food.cediner.tech/";
+    public static final String API_ENDPOINT = Utils.getpref("food_service_endpoint_api", DEFAULT_SERVICE_URL + "api/");
+    private static final String FOOD_DATA_URL = Utils.getpref("food_service_data_url", DEFAULT_SERVICE_URL + "api/data/food-info.json");
     private static final File FOOD_DATA_CACHE_FILE = new File("food_data.json");
-    private static String token = "Purus-Pasta-the-new-2";  //Config.confid maybe ArdClient also works
+    private static String token = "ardClient";  //Config.confid maybe ArdClient also works
 
     private static final Map<String, ParsedFoodInfo> cachedItems = new ConcurrentHashMap<>();
     private static final Queue<HashedFoodInfo> sendQueue = new ConcurrentLinkedQueue<>();
