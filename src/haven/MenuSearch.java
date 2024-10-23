@@ -135,7 +135,7 @@ public class MenuSearch extends Window implements ObservableListener<MenuGrid.Pa
         ItemFilter itemFilter = ItemFilter.create(filter);
         List<MenuGrid.Pagina> all = new ArrayList<>(this.all);
         if (filter.startsWith("new:")) {
-            all.stream().filter(p -> p.newp != 0).forEach(list::add);
+            all.stream().filter(p -> p.anew != 0).forEach(list::add);
         }
         if (list.listitems() == 0) {
             all.stream().filter(p -> {

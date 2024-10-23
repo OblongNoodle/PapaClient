@@ -113,6 +113,7 @@ public class MenuGrid extends Widget {
     public boolean discordconnected;
     public Pagina lastCraft = null;
     public int pagseq = 0;
+    private double fstart;
 
     @RName("scm")
     public static class $_ implements Factory {
@@ -127,9 +128,8 @@ public class MenuGrid extends Widget {
         public Indir<Resource> res;
         public byte[] sdt = null;
         public State st;
-        public double meter, gettime, dtime, fstart;
+        public double meter, gettime, dtime;
         public Indir<Tex> img;
-        public int newp;
         public int anew, tnew;
         public Object[] rawinfo = {};
         //        private final Consumer<Pagina> onUse;
@@ -607,16 +607,18 @@ public class MenuGrid extends Widget {
         synchronized (paginae) {
             open = new LinkedList<Pagina>();
             for (Pagina pag : paginae) {
-                if (pag.newp == 2) {
-                    pag.newp = 0;
-                    pag.fstart = 0;
+                try {
+                    for (Pagina npag = pag; npag != null; npag = npag.parent())
+                        npag.tnew = Math.max(npag.tnew, pag.anew);
+                } catch (Loading l) {
                 }
                 open.add(pag);
             }
             for (Pagina pag : pmap.values()) {
-                if (pag.newp == 2) {
-                    pag.newp = 0;
-                    pag.fstart = 0;
+                try {
+                    for (Pagina npag = pag; npag != null; npag = npag.parent())
+                        npag.tnew = Math.max(npag.tnew, pag.anew);
+                } catch (Loading l) {
                 }
             }
         }
@@ -630,10 +632,6 @@ public class MenuGrid extends Widget {
                 if (ad == null)
                     throw (new RuntimeException("Pagina in " + pag.res + " lacks action"));
                 Pagina parent = paginafor(ad.parent);
-                if ((pag.newp != 0) && (parent != null) && (parent.newp == 0)) {
-                    parent.newp = 2;
-                    parent.fstart = (parent.fstart == 0) ? pag.fstart : Math.min(parent.fstart, pag.fstart);
-                }
                 if (parent == p)
                     buf.add(pag);
                 else if ((parent != null) && !close.contains(parent) && !open.contains(parent))
@@ -1389,6 +1387,7 @@ public class MenuGrid extends Widget {
                     layout[x][y] = btn;
                 }
             }
+            fstart = Utils.rtime();
         }
     }
 
@@ -1432,21 +1431,16 @@ public class MenuGrid extends Widget {
                         g.fellipse(p.add(bgsz.div(2)), bgsz.div(2), Math.PI / 2, ((Math.PI / 2) + (Math.PI * 2 * m)));
                         g.chcolor();
                     }
-                    if (info.newp != 0) {
-                        if (info.fstart == 0) {
-                            info.fstart = now;
-                        } else {
-                            double ph = (now - info.fstart) - (((x + (y * gsz.x)) * 0.15) % 1.0);
-                            if (ph < 1.25) {
-                                g.chcolor(255, 255, 255, (int) (255 * ((Math.cos(ph * Math.PI * 2) * -0.5) + 0.5)));
-                                g.image(glowmask(btn), p.sub(4, 4));
-                                g.chcolor();
-                            } else {
-                                g.chcolor(255, 255, 255, 128);
-                                g.image(glowmask(btn), p.sub(4, 4));
-                                g.chcolor();
-                            }
+                    if (info.tnew != 0) {
+                        info.anew = 1;
+                        double a = 0.25;
+                        if (info.tnew == 2) {
+                            double ph = (now - fstart) - (((x + (y * gsz.x)) * 0.15) % 1.0);
+                            a = (ph < 1.25) ? (Math.cos(ph * Math.PI * 2) * -0.25) + 0.25 : 0.25;
                         }
+                        g.chcolor(255, 255, 255, (int) (a * 255));
+                        g.image(glowmask(btn), p.sub(4, 4));
+                        g.chcolor();
                     }
                     if (btn == pressed) {
                         g.chcolor(new Color(0, 0, 0, 128));
@@ -1551,6 +1545,7 @@ public class MenuGrid extends Widget {
             }
             selectCraft(this.cur);
         } else {
+            r.pag.anew = r.pag.tnew = 0;
             Resource.AButton act = r.pag.act();
             if (act == null) {
                 r.use(iact);
@@ -1605,7 +1600,7 @@ public class MenuGrid extends Widget {
                     ui.gui.add(confirmwnd, new Coord(ui.gui.sz.x / 2 - confirmwnd.sz.x / 2, ui.gui.sz.y / 2 - 200));
                     confirmwnd.show();
                 } else {
-                    r.pag.newp = 0;
+                    r.pag.anew = r.pag.tnew = 0;
                     r.use(iact);
                     if (reset) {
                         this.cur = null;
