@@ -81,9 +81,17 @@ public class Partyview extends MovableWidget {
         }
 
         public void wdgmsg(Widget sender, String msg, Object... args) {
-            if (sender instanceof Avaview)
-                wdgmsg(msg, args);
-            else
+            if (sender instanceof Avaview) {
+                if (msg == "click" && (int) args[0] == 3 && ui.modshift) {
+                    Coord2d mc = m.getc();
+                    if (mc != null) {
+                        ui.gui.map.questQueueAdd(mc);
+                        ui.gui.mapfile.show();
+                    }
+                } else {
+                    wdgmsg(msg, args);
+                }
+            } else
                 super.wdgmsg(sender, msg, args);
         }
 
