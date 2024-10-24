@@ -31,10 +31,17 @@ public class Updater {
     String baseurl;
     MessageDigest md;
     boolean skip = false;
+    String token = null;
+    int idx = 1;
 
     public Updater(String[] args) {
-        if (args[1].equals("skip") || args[1].equals("-s")) skip = true;
-        baseurl = skip ? args[2] : args[1];
+        if (args[idx].equals("skip") || args[idx].equals("-s")) {
+            skip = true;
+            idx++;
+        }
+        if (args[idx].equals("-t"))
+            token = args[++idx];
+        baseurl = args[++idx];
         new File("tmp/").mkdirs();
     }
 
@@ -84,7 +91,7 @@ public class Updater {
                 String fn = dl.substring(baseurl.length());
                 Logging.log("Downloading " + dl + " -> " + fn);
                 try {
-                    FileUtils.copyURLToFile(new URL(dl.replaceAll("\\\\", "/")), new File(fn));
+                    Http.copyURLToFile(new URL(dl.replaceAll("\\\\", "/")), token, new File(fn));
                 } catch (Exception e) {
                     Logging.error(e, false);
                 }
@@ -97,7 +104,7 @@ public class Updater {
     }
 
     public void run(String[] cargs) {
-        int start = skip ? 3 : 2;
+        int start = idx + 1;
         if (cargs.length > start) {
             Logging.log("Starting client");
             ArrayList<String> args = new ArrayList<String>();
