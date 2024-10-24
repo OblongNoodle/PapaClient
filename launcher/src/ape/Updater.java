@@ -7,6 +7,7 @@ import java.io.File;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Updater {
     public static void main(String args[]) {
@@ -39,9 +40,11 @@ public class Updater {
             skip = true;
             idx++;
         }
-        if (args[idx].equals("-t"))
-            token = args[++idx];
-        baseurl = args[++idx];
+        if (args[idx].equals("-t")) {
+            idx++;
+            token = args[idx++];
+        }
+        baseurl = args[idx++];
         new File("tmp/").mkdirs();
     }
 
@@ -104,7 +107,8 @@ public class Updater {
     }
 
     public void run(String[] cargs) {
-        int start = idx + 1;
+        int start = idx;
+        System.out.println(start + " " + Arrays.toString(cargs));
         if (cargs.length > start) {
             Logging.log("Starting client");
             ArrayList<String> args = new ArrayList<String>();
