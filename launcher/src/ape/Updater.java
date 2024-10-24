@@ -108,7 +108,6 @@ public class Updater {
 
     public void run(String[] cargs) {
         int start = idx;
-        System.out.println(start + " " + Arrays.toString(cargs));
         if (cargs.length > start) {
             Logging.log("Starting client");
             ArrayList<String> args = new ArrayList<String>();
