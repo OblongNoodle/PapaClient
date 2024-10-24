@@ -393,7 +393,7 @@ public class LocalMiniMap extends Widget {
                         stage = gob.getattr(ResDrawable.class).sdt.peekrbuf(0);
                     if (stage == 10 || stage == 14)
                         g.image(dooricn, p2c(gob.rc).sub(dooricn.sz().div(2)).add(delta));
-                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && (gob.name().contains("items") || !gob.name().contains("terobjs"))) {
+                } else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && (gob.name().contains("items") || !gob.name().contains("terobjs") && !gob.name().contains("tiles/paving"))) {
                     double d = Utils.rtime() % 2;
                     if (d > 1)
                         d = 2 - d;
@@ -539,7 +539,7 @@ public class LocalMiniMap extends Widget {
                             if (itm == null || !itm.selected) {
                                 return gob;
                             }
-                        }*/ else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && (gob.name().contains("items") || !gob.name().contains("terobjs"))) {
+                        }*/ else if (configuration.showUniconedItemsIcon && gob.getattr(GobIcon.class) == null && (gob.name().contains("items") || !gob.name().contains("terobjs") && !gob.name().contains("tiles/paving"))) {
                             return gob;
                         }
                     }
@@ -777,17 +777,17 @@ public class LocalMiniMap extends Widget {
             int tileSize = (int) (100 * zoom);
             Coord ts = new Coord(tileSize, tileSize);
             Coord half = sz.div(2);
-            Coord t = half.div(ts).add(2, 2);
+            Coord t = new Coord2d(half).div(ts).add(2, 2).ceil();
             Coord po = cur.grid.gc.mul(cmaps).sub(cc).mul(zoom).add(half).add(delta);
-            Coord to = po.div(cmaps).sub(1, 1);
+//            Coord to = po.div(cmaps);
 
             if (maptiles.size() >= 9) {
                 Coord c = new Coord();
-                for (c.x = -t.x; c.x < t.x + t.x; c.x++) {
-                    for (c.y = -t.y; c.y < t.y + t.y; c.y++) {
-                        Tex mt = maptiles.get(cur.grid.gc.add(c).sub(to));
+                for (c.x = -t.x; c.x < t.x; c.x++) {
+                    for (c.y = -t.y; c.y < t.y; c.y++) {
+                        Tex mt = maptiles.get(cur.grid.gc.add(c)/*.sub(to)*/);
                         if (mt != null) {
-                            Coord mtc = c.sub(to).mul(ts).add(po);
+                            Coord mtc = c./*sub(to).*/mul(ts).add(po);
                             if (mtc.x + ts.x < 0 || mtc.x > sz.x || mtc.y + ts.y < 0 || mtc.y > sz.y)
                                 continue;
                             g.image(mt, mtc, ts);
