@@ -157,7 +157,7 @@ public class TunnelerBot extends Window implements Runnable {
                 } else if (autoMineActive) {
                     if (gui.getmeter("stam", 0).a < 0.40) {
                         clearhand();
-                        PBotUtils.drink(ui, true);
+                        AUtils.drinkTillFull(gui, 0.99, 0.99);
                     }
                     clearhand();
 
