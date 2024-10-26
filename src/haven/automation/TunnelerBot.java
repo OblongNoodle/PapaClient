@@ -1,14 +1,27 @@
 package haven.automation;
 
-import haven.*;
+import haven.Button;
+import haven.CheckBox;
+import haven.Coord;
+import haven.Coord2d;
+import haven.GameUI;
+import haven.Gob;
+import haven.Label;
+import haven.Loading;
+import haven.MCache;
+import haven.RichText;
+import haven.UI;
+import haven.WItem;
+import haven.Widget;
+import haven.Window;
 import haven.automation.helpers.TileStatic;
-import haven.purus.DrinkWater;
-import haven.purus.pbot.PBotGob;
 import haven.purus.pbot.PBotGobAPI;
 import haven.purus.pbot.PBotItem;
 import haven.purus.pbot.PBotUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import static haven.OCache.posres;
 import static java.lang.Thread.sleep;
@@ -161,9 +174,7 @@ public class TunnelerBot extends Window implements Runnable {
                     for (Gob boulder : boulders) {
                         if (boulder.rc.dist(gui.map.player().rc) < 20) {
                             clearhand();
-                            FlowerMenu.setNextSelection();
-                            PBotGob.of(boulder).doClick(3, 0);
-//                            AUtils.rightClickGobAndSelectOption(gui, boulder, 0);
+                            AUtils.rightClickGobAndSelectOption(gui, boulder, 0);
                             AUtils.clickUiButton("paginae/act/mine", gui);
                             sleep(2000);
                             continue miningLoop;
@@ -257,7 +268,7 @@ public class TunnelerBot extends Window implements Runnable {
         ArrayList<Gob> milestones = AUtils.getGobs("gfx/terobjs/road/milestone-stone-m", gui);
         Coord2d playercood = gui.map.player().rc;
         Gob closestMilestone = AUtils.closestGob(milestones, playercood.floor());
-        Coord addcoord = new Coord(0,0).sub(directionPerpendicular).mul(11);
+        Coord addcoord = new Coord(0, 0).sub(directionPerpendicular).mul(11);
         Coord newMilestonePos = currentAnchorColumn.add(addcoord);
 
 
@@ -322,7 +333,7 @@ public class TunnelerBot extends Window implements Runnable {
 
 
         } else {
-            Coord milestonevision = closestMilestone.rc.floor().add(directionPerpendicular.x*11, directionPerpendicular.y*11);
+            Coord milestonevision = closestMilestone.rc.floor().add(directionPerpendicular.x * 11, directionPerpendicular.y * 11);
             gui.map.pfLeftClick(milestonevision, null);
             AUtils.waitPf(gui);
             AUtils.leftClick(gui, milestonevision);
@@ -461,7 +472,7 @@ public class TunnelerBot extends Window implements Runnable {
         Coord dir2 = directionPerpendicular; //to the side
         Coord dir3 = directionPerpendicular.inv(); //to the other side
 
-        if ((!checkLineMined(currentAnchorColumn, dir2, mineToTheLeft ? 10 : 1)) &&(mineToTheRight || mineToTheLeft)) {
+        if ((!checkLineMined(currentAnchorColumn, dir2, mineToTheLeft ? 10 : 1)) && (mineToTheRight || mineToTheLeft)) {
             return 2;
         } else if ((!checkLineMined(currentAnchorColumn, dir3, 12)) && mineToTheRight) {
             return 3;
@@ -496,7 +507,7 @@ public class TunnelerBot extends Window implements Runnable {
         }
         if (tilesToMine > 0) {
             AUtils.clickUiButton("paginae/act/mine", gui);
-            if(!((PBotGobAPI.player(ui).getPoses().contains("pickan") || PBotGobAPI.player(ui).getPoses().contains("choppan")) || PBotGobAPI.player(ui).getPoses().contains("drinkan"))){
+            if (!((PBotGobAPI.player(ui).getPoses().contains("pickan") || PBotGobAPI.player(ui).getPoses().contains("choppan")) || PBotGobAPI.player(ui).getPoses().contains("drinkan"))) {
                 gui.map.wdgmsg("sel", place.div(11), place.add(end).div(11), 0);
             }
             sleep(500);

@@ -1,8 +1,40 @@
 package haven.automation;
 
-import haven.*;
+import haven.Button;
+import haven.Composite;
+import haven.Composited;
+import haven.Coord;
+import haven.Coord2d;
+import haven.Drawable;
+import haven.FlowerMenu;
+import haven.GAttrib;
+import haven.GameUI;
+import haven.Gob;
+import haven.IMeter;
+import haven.Inventory;
+import haven.ItemInfo;
+import haven.Loading;
+import haven.MCache;
+import haven.MenuGrid;
+import haven.ResDrawable;
+import haven.Resource;
+import haven.WItem;
+import haven.Widget;
+import haven.Window;
+import haven.purus.pbot.PBotGob;
+import haven.purus.pbot.PBotInventory;
+import haven.purus.pbot.PBotItem;
+import haven.purus.pbot.PBotUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import static haven.MCache.cmaps;
 import static haven.MCache.tilesz;
@@ -22,10 +54,12 @@ public class AUtils {
         gui.map.wdgmsg("click", Coord.z, gui.map.player().rc.floor(posres), 3, 0);
     }
 
-    /*public static void clickWItemAndSelectOption(GameUI gui, WItem wItem, int index) {
-        wItem.item.wdgmsg("iact", Coord.z, gui.ui.modflags());
-        gui.ui.rcvr.rcvmsg(gui.ui.lastid+1, "cl", index, gui.ui.modflags());
-    }*/
+    public static void clickWItemAndSelectOption(GameUI gui, WItem wItem, int index) {
+        FlowerMenu.setNextSelection(index);
+        new PBotItem(wItem).activateItem();
+//        wItem.item.wdgmsg("iact", Coord.z, gui.ui.modflags());
+//        gui.ui.rcvr.rcvmsg(gui.ui.lastid+1, "cl", index, gui.ui.modflags());
+    }
 
     public static void clearhand(GameUI gui) {
         if (!gui.hand.isEmpty()) {
@@ -38,17 +72,81 @@ public class AUtils {
         rightClick(gui);
     }
 
-    /*public static void drinkTillFull(GameUI gui, double threshold, double stoplevel) throws InterruptedException {
-        while (gui.drink(threshold)) {
+    public static void drinkTillFull(GameUI gui, double threshold, double stoplevel) throws InterruptedException {
+        while (drink(gui, threshold)) {
             Thread.sleep(490);
             do {
                 Thread.sleep(10);
                 IMeter.Meter stam = gui.getmeter("stam", 0);
                 if (stam.a >= stoplevel)
                     break;
-            } while (gui.prog != null && gui.prog.prog >= 0);
+            } while (gui.prog >= 0);
         }
-    }*/
+    }
+
+    public static boolean drink(GameUI gui, double threshold) {
+        //TODO add trigger to stop drinking tea while > 90% energy
+        IMeter.Meter stam = gui.getmeter("stam", 0);
+        IMeter.Meter nrj = gui.getmeter("nrj", 0);
+        if (stam == null || stam.a > threshold) {
+            return false;
+        }
+        List<WItem> containers = new ArrayList<WItem>();
+        List<PBotInventory> inventories = PBotUtils.getAllInventories(gui.ui);
+        for (PBotInventory i : inventories) {
+            containers.addAll(i.inv.getItemsPartial("Waterskin", "Waterflask", "Kuksa", "Bucket", "glassjug"));
+        }
+        for (int i = 6; i <= 7; i++) {
+            try {
+                if (gui.getequipory().slots[i].item.res.get().basename().equals("bucket-water")) {
+                    containers.add(gui.getequipory().slots[i]);
+                }
+            } catch (Loading | NullPointerException ignored) {}
+        }
+        Collections.reverse(containers);
+        WItem teacontainer = null;
+        WItem watercontainer = null;
+        for (WItem wi : containers) {
+            ItemInfo.Contents cont = wi.item.getcontents();
+            if (cont == null)
+                continue;
+            for (ItemInfo info : cont.sub) {
+                if (info instanceof ItemInfo.Name) {
+                    ItemInfo.Name name = (ItemInfo.Name) info;
+                    if (name.str != null) {
+                        if (name.str.text.equals("Tea"))
+                            teacontainer = wi;
+                        else if (name.str.text.equals("Water"))
+                            watercontainer = wi;
+                    }
+                    if (teacontainer != null && watercontainer != null) {
+                        break;
+                    }
+                }
+            }
+            if (teacontainer != null && watercontainer != null) {
+                break;
+            }
+        }
+        if (teacontainer == null && watercontainer == null) {
+            return false;
+        }
+        gui.ui.lcc = Coord.z;
+        if (gui.fv != null && gui.fv.current != null) {
+            if (watercontainer != null) {
+                AUtils.clickWItemAndSelectOption(gui, watercontainer, 0);
+            } else {
+                AUtils.clickWItemAndSelectOption(gui, teacontainer, 0);
+            }
+        } else {
+            if ((nrj != null && nrj.a < 0.95 && teacontainer != null) || watercontainer == null) {
+                AUtils.clickWItemAndSelectOption(gui, teacontainer, 0);
+            } else {
+                AUtils.clickWItemAndSelectOption(gui, watercontainer, 0);
+            }
+        }
+        return true;
+    }
 
     public static ArrayList<Gob> getGobType(String gobName, GameUI gui) {
         ArrayList<Gob> gobs = new ArrayList<>();
@@ -157,7 +255,6 @@ public class AUtils {
     }
 
 
-
     public static Map<Gob, Integer> getGobsInSelectedArea(Coord start, Coord end, GameUI gui) {
         Map<Gob, Integer> gobsInArea = new HashMap<>();
         synchronized (gui.map.glob.oc) {
@@ -167,7 +264,7 @@ public class AUtils {
                         Resource res = gob.getres();
                         if (res != null) {
                             String name = res.name;
-                            if(name.contains("borka/body")){
+                            if (name.contains("borka/body")) {
                                 continue;
                             }
                             Gob existingGob = null;
@@ -207,7 +304,7 @@ public class AUtils {
                         if (res != null && res.name.equals(name)) {
                             int stage = AUtils.getDrawState(gob);
                             double dist = player.dist(gob.rc);
-                            if(dist < minDist && (stage >= stageP)) {
+                            if (dist < minDist && (stage >= stageP)) {
                                 minDist = dist;
                                 closestGob = gob;
                             }
@@ -224,7 +321,7 @@ public class AUtils {
         try {
             Coord2d player = gui.map.player().rc;
             return player.x > start.x && player.x < end.x && player.y > start.y && player.y < end.y;
-        } catch (Exception e){
+        } catch (Exception e) {
             return false;
         }
     }
@@ -250,9 +347,9 @@ public class AUtils {
 
     public static int countTiles(String name, Coord start, Coord end, GameUI gui) {
         int count = 0;
-        for (int x = start.x+5; x < end.x; x+= 11) {
-            for (int y = start.y+5; y < end.y; y+= 11) {
-                String tilename = getTileName(new Coord(x,y), gui.map.glob.map);
+        for (int x = start.x + 5; x < end.x; x += 11) {
+            for (int y = start.y + 5; y < end.y; y += 11) {
+                String tilename = getTileName(new Coord(x, y), gui.map.glob.map);
                 if (name.equals(tilename)) {
                     count++;
                 }
@@ -303,9 +400,8 @@ public class AUtils {
     }
 
 
-
     public static boolean waitPf(GameUI gui) throws InterruptedException {
-        if(gui.map.pfthread == null){
+        if (gui.map.pfthread == null) {
             return false;
         }
         int time = 0;
@@ -344,7 +440,7 @@ public class AUtils {
         }
     }
 
-    public static void getGridHeightAvg(GameUI gui){
+    public static void getGridHeightAvg(GameUI gui) {
         try {
             Coord playerCoord = gui.map.player().rc.floor(tilesz);
             MCache.Grid grid = gui.ui.sess.glob.map.getgrid(playerCoord.div(cmaps));
@@ -356,7 +452,7 @@ public class AUtils {
                 for (int j = 0; j < gridSize; j++) {
                     wholeGridHeight += grid.z[i * gridSize + j];
                     int quarterIndex;
-                    if(i < halfGridSize) {
+                    if (i < halfGridSize) {
                         quarterIndex = (j < halfGridSize) ? 0 : 1;
                     } else {
                         quarterIndex = (j < halfGridSize) ? 2 : 3;
@@ -394,14 +490,14 @@ public class AUtils {
         Set<String> supports = new HashSet<>(Arrays.asList("gfx/terobjs/ladder", "gfx/terobjs/minesupport", "gfx/terobjs/column", "gfx/terobjs/minebeam"));
         Coord2d player = gui.map.player().rc;
         Gob closestGob = null;
-        double closestDistance  = 10000;
+        double closestDistance = 10000;
         synchronized (gui.map.glob.oc) {
             for (Gob gob : gui.map.glob.oc) {
                 try {
                     Resource res = gob.getres();
                     if (res != null && supports.contains(res.name)) {
                         double currentDistance = gob.rc.dist(player);
-                        if(currentDistance < closestDistance){
+                        if (currentDistance < closestDistance) {
                             closestGob = gob;
                             closestDistance = currentDistance;
                         }
@@ -439,85 +535,88 @@ public class AUtils {
         return closestGob;
     }
 
-    /*public static void rightClickGobAndSelectOption(GameUI gui, Gob gob, int index) {
-        gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
-        gui.ui.rcvr.rcvmsg(gui.ui.lastid+1, "cl", index, gui.ui.modflags());
-    }*/
+    public static void rightClickGobAndSelectOption(GameUI gui, Gob gob, int index) {
+        FlowerMenu.setNextSelection(index);
+        PBotGob.of(gob).doClick(3, 0);
+//        gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 0, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+//        gui.ui.rcvr.rcvmsg(gui.ui.lastid+1, "cl", index, gui.ui.modflags());
+    }
 
     public static void rightClickShiftCtrl(GameUI gui, Gob gob) {
         gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 3, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
     }
 
 
-    public final static HashSet<String> potentialAggroTargets = new HashSet<String>() {{ // ND: Probably still missing dungeon ants, dungeon bees, dungeon beavers, dungeon bats?
-        add("gfx/borka/body");
-        add("gfx/kritter/adder/adder");
-        add("gfx/kritter/ants/ants");
+    public final static HashSet<String> potentialAggroTargets = new HashSet<String>() {
+        { // ND: Probably still missing dungeon ants, dungeon bees, dungeon beavers, dungeon bats?
+            add("gfx/borka/body");
+            add("gfx/kritter/adder/adder");
+            add("gfx/kritter/ants/ants");
 //        add("gfx/kritter/cattle/cattle"); // ND: Aurochs are handled differently in the method below!
-        add("gfx/kritter/badger/badger");
-        add("gfx/kritter/bat/bat");
-        add("gfx/kritter/bear/bear");
-        add("gfx/kritter/beaver/beaver");
-        add("gfx/kritter/boar/boar");
-        add("gfx/kritter/boreworm/boreworm");
-        add("gfx/kritter/caveangler/caveangler");
-        add("gfx/kritter/cavelouse/cavelouse");
-        add("gfx/kritter/chasmconch/chasmconch"); // ND: I even added this one
-        add("gfx/kritter/eagleowl/eagleowl");
-        add("gfx/kritter/fox/fox");
-        add("gfx/kritter/goat/wildgoat");
-        add("gfx/kritter/goldeneagle/goldeneagle");
-        add("gfx/kritter/greyseal/greyseal");
-        add("gfx/kritter/horse/horse");
-        add("gfx/kritter/lynx/lynx");
-        add("gfx/kritter/mammoth/mammoth");
-        add("gfx/kritter/moose/moose");
+            add("gfx/kritter/badger/badger");
+            add("gfx/kritter/bat/bat");
+            add("gfx/kritter/bear/bear");
+            add("gfx/kritter/beaver/beaver");
+            add("gfx/kritter/boar/boar");
+            add("gfx/kritter/boreworm/boreworm");
+            add("gfx/kritter/caveangler/caveangler");
+            add("gfx/kritter/cavelouse/cavelouse");
+            add("gfx/kritter/chasmconch/chasmconch"); // ND: I even added this one
+            add("gfx/kritter/eagleowl/eagleowl");
+            add("gfx/kritter/fox/fox");
+            add("gfx/kritter/goat/wildgoat");
+            add("gfx/kritter/goldeneagle/goldeneagle");
+            add("gfx/kritter/greyseal/greyseal");
+            add("gfx/kritter/horse/horse");
+            add("gfx/kritter/lynx/lynx");
+            add("gfx/kritter/mammoth/mammoth");
+            add("gfx/kritter/moose/moose");
 //        add("gfx/kritter/sheep/sheep"); // ND: Mouflons are handled differently in the method below!
-        add("gfx/kritter/nidbane/nidbane");
-        add("gfx/kritter/ooze/greenooze");
-        add("gfx/kritter/orca/orca");
-        add("gfx/kritter/otter/otter");
-        add("gfx/kritter/pelican/pelican");
-        add("gfx/kritter/rat/caverat");
-        add("gfx/kritter/reddeer/reddeer");
-        add("gfx/kritter/reindeer/reindeer");
-        add("gfx/kritter/roedeer/roedeer");
-        add("gfx/kritter/spermwhale/spermwhale");
-        add("gfx/kritter/stoat/stoat");
-        add("gfx/kritter/swan/swan");
-        add("gfx/kritter/troll/troll");
-        add("gfx/kritter/walrus/walrus");
-        add("gfx/kritter/wolf/wolf");
-        add("gfx/kritter/wolverine/wolverine");
-        add("gfx/kritter/woodgrouse/woodgrouse-m");
+            add("gfx/kritter/nidbane/nidbane");
+            add("gfx/kritter/ooze/greenooze");
+            add("gfx/kritter/orca/orca");
+            add("gfx/kritter/otter/otter");
+            add("gfx/kritter/pelican/pelican");
+            add("gfx/kritter/rat/caverat");
+            add("gfx/kritter/reddeer/reddeer");
+            add("gfx/kritter/reindeer/reindeer");
+            add("gfx/kritter/roedeer/roedeer");
+            add("gfx/kritter/spermwhale/spermwhale");
+            add("gfx/kritter/stoat/stoat");
+            add("gfx/kritter/swan/swan");
+            add("gfx/kritter/troll/troll");
+            add("gfx/kritter/walrus/walrus");
+            add("gfx/kritter/wolf/wolf");
+            add("gfx/kritter/wolverine/wolverine");
+            add("gfx/kritter/woodgrouse/woodgrouse-m");
 
-        add("gfx/kritter/ants/queenant");
-        add("gfx/kritter/ants/royalguardant");
-        add("gfx/kritter/ants/warriorant");
-        add("gfx/kritter/ants/redants");
+            add("gfx/kritter/ants/queenant");
+            add("gfx/kritter/ants/royalguardant");
+            add("gfx/kritter/ants/warriorant");
+            add("gfx/kritter/ants/redants");
 
-        add("gfx/kritter/beaver/beaverking");
-        add("gfx/kritter/beaver/oldbeaver");
-        add("gfx/kritter/beaver/grizzlybeaver");
+            add("gfx/kritter/beaver/beaverking");
+            add("gfx/kritter/beaver/oldbeaver");
+            add("gfx/kritter/beaver/grizzlybeaver");
 
-        add("gfx/kritter/bees/warriordrone");
-        add("gfx/kritter/bees/queenbee");
-        add("gfx/kritter/bees/sentinelbee");
-        add("gfx/kritter/bees/vulturebee");
-        add("gfx/kritter/bees/honeybee");
-        add("gfx/kritter/bees/beelarva");
-        add("gfx/kritter/wildbees/beeswarm");
+            add("gfx/kritter/bees/warriordrone");
+            add("gfx/kritter/bees/queenbee");
+            add("gfx/kritter/bees/sentinelbee");
+            add("gfx/kritter/bees/vulturebee");
+            add("gfx/kritter/bees/honeybee");
+            add("gfx/kritter/bees/beelarva");
+            add("gfx/kritter/wildbees/beeswarm");
 
-        add("gfx/kritter/bat/nightqueen");
-        add("gfx/kritter/bat/vampire");
-        add("gfx/kritter/bat/bloodstalker");
-        add("gfx/kritter/bat/denmother");
-        add("gfx/kritter/bat/fatbat");
+            add("gfx/kritter/bat/nightqueen");
+            add("gfx/kritter/bat/vampire");
+            add("gfx/kritter/bat/bloodstalker");
+            add("gfx/kritter/bat/denmother");
+            add("gfx/kritter/bat/fatbat");
 
 
-
-    }
+        }
     };
+
     public static HashMap<Long, Gob> getAllAttackableMap(GameUI gui) {
         HashMap<Long, Gob> gobs = new HashMap<>();
         if (gui.map.plgob == -1) {
@@ -525,9 +624,9 @@ public class AUtils {
         }
         synchronized (gui.map.glob.oc) {
             for (Gob gob : gui.map.glob.oc) {
-                if (gob.getres() != null && gob.getres().name != null){
+                if (gob.getres() != null && gob.getres().name != null) {
                     if (gob.id != gui.map.plgob) {
-                        if (potentialAggroTargets.contains(gob.getres().name)){
+                        if (potentialAggroTargets.contains(gob.getres().name)) {
                             gobs.put(gob.id, gob);
                         } else if (gob.getres().name.equals("gfx/kritter/cattle/cattle")) { // ND: Special case for Aurochs
                             for (GAttrib g : gob.attr.values()) {
@@ -536,7 +635,7 @@ public class AUtils {
                                         Composite c = (Composite) g;
                                         if (c.comp.cmod.size() > 0) {
                                             for (Composited.MD item : c.comp.cmod) {
-                                                if (item.mod.get().basename().equals("aurochs")){
+                                                if (item.mod.get().basename().equals("aurochs")) {
                                                     gobs.put(gob.id, gob);
                                                 }
                                             }
@@ -551,7 +650,7 @@ public class AUtils {
                                         Composite c = (Composite) g;
                                         if (c.comp.cmod.size() > 0) {
                                             for (Composited.MD item : c.comp.cmod) {
-                                                if (item.mod.get().basename().equals("mouflon")){
+                                                if (item.mod.get().basename().equals("mouflon")) {
                                                     gobs.put(gob.id, gob);
                                                 }
                                             }
@@ -575,9 +674,9 @@ public class AUtils {
         }
         synchronized (gui.map.glob.oc) {
             for (Gob gob : gui.map.glob.oc) {
-                if (gob.getres() != null && gob.getres().name != null){
+                if (gob.getres() != null && gob.getres().name != null) {
                     if (gob.id != gui.map.plgob) {
-                        if (gob.getres().name.equals("gfx/borka/body")){
+                        if (gob.getres().name.equals("gfx/borka/body")) {
                             gobs.put(gob.id, gob);
                         }
                     }
@@ -623,8 +722,7 @@ public class AUtils {
             }
             try {
                 Thread.sleep(5L);
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 throw ie;
             }
         }
@@ -641,8 +739,7 @@ public class AUtils {
             }
             try {
                 Thread.sleep(5L);
-            }
-            catch (InterruptedException ie) {
+            } catch (InterruptedException ie) {
                 throw ie;
             }
         }
@@ -669,13 +766,12 @@ public class AUtils {
     public static WItem findItemInInv(final Inventory inv, final String resName) {
         for (Widget wdg = inv.child; wdg != null; wdg = wdg.next) {
             if (wdg instanceof WItem) {
-                final WItem witm = (WItem)wdg;
+                final WItem witm = (WItem) wdg;
                 try {
                     if (witm.item.getres().name.equals(resName)) {
                         return witm;
                     }
-                }
-                catch (Loading ignored) {}
+                } catch (Loading ignored) {}
             }
         }
         return null;
