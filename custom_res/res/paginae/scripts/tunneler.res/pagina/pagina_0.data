@@ -1,0 +1,5 @@
+This is a tunnel mining bot that can be used to mine in one direction, build mining supports, and roads.
+
+A new window will be created when you click on this action button, from which you can start/stop the bot.
+
+If you encounter danger, the bot will attempt to run in the opposite direction.

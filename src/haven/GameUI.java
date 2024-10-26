@@ -33,6 +33,7 @@ import haven.automation.Discord;
 import haven.automation.ErrorSysMsgCallback;
 import haven.automation.PickForageable;
 import haven.automation.Traverse;
+import haven.automation.TunnelerBot;
 import haven.overlays.OverlayManager;
 import haven.purus.DrinkWater;
 import haven.purus.ItemClickCallback;
@@ -181,6 +182,9 @@ public class GameUI extends ConsoleHost implements Console.Directory, UI.Message
     public Thread DrinkThread;
     public CraftDBWnd craftwnd = null;
     private TimersWnd timers;
+
+    public TunnelerBot tunnelerBot;
+    public Thread tunnelerBotThread;
 
     public final List<DowseWnd> dowsewnds = Collections.synchronizedList(new ArrayList<>());
     public ForageHelperWnd foragehelper;

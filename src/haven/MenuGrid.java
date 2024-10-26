@@ -63,6 +63,7 @@ import haven.automation.SteelRefueler;
 import haven.automation.TakeTrays;
 import haven.automation.TrellisDestroy;
 import haven.automation.TrellisHarvest;
+import haven.automation.TunnelerBot;
 import haven.automation.farmer.FarmerBots;
 import haven.purus.Farmer;
 import haven.purus.Farmer2;
@@ -354,7 +355,7 @@ public class MenuGrid extends Widget {
         }
 
         public BufferedImage img() {
-            return (res.layer(Resource.imgc).img);
+            return (PUtils.uiscale(res.layer(Resource.imgc).img, UI.scale(32, 32)));
         }
 
         public String name() {
@@ -1158,6 +1159,27 @@ public class MenuGrid extends Widget {
                     }
                 }
         ));
+        addSpecial(new SpecialPagina(this, "paginae::scripts::tunneler",
+                Resource.local().load("paginae/scripts/tunneler"),
+                (pag) -> {
+                    GameUI gui = ui.gui;
+                    if (gui != null) {
+                        if (gui.tunnelerBot == null && gui.tunnelerBotThread == null) {
+                            gui.tunnelerBot = new TunnelerBot(gui);
+                            gui.add(gui.tunnelerBot, new Coord(gui.sz.x / 2 - gui.tunnelerBot.sz.x / 2, gui.sz.y / 2 - gui.tunnelerBot.sz.y / 2 - 200));
+                            gui.tunnelerBotThread = new Thread(gui.tunnelerBot, "AutoTunneler");
+                            gui.tunnelerBotThread.start();
+                        } else {
+                            if (gui.tunnelerBot != null) {
+                                gui.tunnelerBot.stop();
+                                gui.tunnelerBot.reqdestroy();
+                                gui.tunnelerBot = null;
+                                gui.tunnelerBotThread = null;
+                            }
+                        }
+                    }
+                }
+        ));
 
         /*
         addSpecial(new SpecialPagina(this, "paginae::windows::char",
@@ -1690,7 +1712,7 @@ public class MenuGrid extends Widget {
 //                if (!(dragging instanceof SpecialPagina)) {
 //                    ui.dropthing(ui.root, ui.mc, dragging.res());
 //                } else {
-                    ui.dropthing(ui.root, ui.mc, dragging);
+                ui.dropthing(ui.root, ui.mc, dragging);
 //                }
                 pressed = null;
                 dragging = null;
