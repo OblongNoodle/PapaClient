@@ -7,7 +7,9 @@ import haven.FromResource;
 import haven.GAttrib;
 import haven.Gob;
 import haven.Message;
+import haven.PUtils;
 import haven.PView;
+import haven.TexI;
 import haven.Text;
 import haven.Utils;
 import haven.res.ui.obj.buddy.Info;
@@ -49,7 +51,7 @@ public class Named extends GAttrib implements InfoPart {
 
     @Override
     public void draw(CompImage cmp, PView.RenderContext ctx) {
-        cmp.add(Utils.outline2(Text.std.render(nm, col).img, Utils.contrast(col)), Coord.z);
+        cmp.add(PUtils.rasterimg(PUtils.blurmask2(Text.std.render(nm, col).img.getRaster(), 1, 1, Color.DARK_GRAY)), Coord.z);
     }
 
     @Override
