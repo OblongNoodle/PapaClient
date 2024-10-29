@@ -399,7 +399,7 @@ public class AUtils {
         return supports;
     }
 
-
+    @Deprecated
     public static boolean waitPf(GameUI gui) throws InterruptedException {
         if (gui.map.pfthread == null) {
             return false;
