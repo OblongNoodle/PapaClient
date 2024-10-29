@@ -11,7 +11,6 @@ import haven.Loading;
 import haven.MCache;
 import haven.RichText;
 import haven.UI;
-import haven.WItem;
 import haven.Widget;
 import haven.Window;
 import haven.automation.helpers.TileStatic;
@@ -413,7 +412,7 @@ public class TunnelerBot extends Window implements Runnable {
 
     private void waitBuildingConstruction(String name) throws InterruptedException {
         int timeout = 0;
-        while (timeout < 30 && hasRocksInInv(0) && !checkIfConstructed(name)) {
+        while (timeout < 60 && hasRocksInInv(0) && !checkIfConstructed(name)) {
             sleep(200);
             timeout++;
         }
@@ -435,9 +434,11 @@ public class TunnelerBot extends Window implements Runnable {
         for (Gob gob : gobs) {
             if (TileStatic.SUPPORT_MATERIALS.contains(gob.getres().basename())) {
                 Coord2d tc = new Coord2d(gob.rc.floor(MCache.tilesz)).mul(MCache.tilesz).add(MCache.tilesz.div(2, 2));
+                debug("pf " + gob.getres());
                 PBotUtils.pfLeftClick(gui.ui, tc.x, tc.y);
 //                AUtils.waitPf(gui);
 
+                debug("collect " + gob.getres());
                 gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
                 sleep(2000);
                 return;
@@ -456,16 +457,12 @@ public class TunnelerBot extends Window implements Runnable {
 
     private boolean hasRocksInInv(int num) {
         int rocksAmount = 0;
-        for (PBotItem wItem : PBotUtils.playerInventory(ui).getInventoryContents()) {
+        for (PBotItem wItem : PBotUtils.playerInventory(ui).getInventoryContentsDontStack()) {
             if (TileStatic.SUPPORT_MATERIALS.contains(wItem.gitem.getres().basename())) {
                 rocksAmount++;
             }
         }
-        for (WItem wItem : AUtils.getAllContentsWindows(gui)) {
-            if (TileStatic.SUPPORT_MATERIALS.contains(wItem.item.getres().basename())) {
-                rocksAmount++;
-            }
-        }
+        debug("rocks " + rocksAmount);
         return rocksAmount > num || gui.maininv.getFreeSpace() == 0;
     }
 
@@ -640,6 +637,10 @@ public class TunnelerBot extends Window implements Runnable {
             gui.tunnelerBotThread = null;
         }
         this.destroy();
+    }
+
+    private void debug(String str) {
+        PBotUtils.debugMsg(gui.ui, str);
     }
 }
 
