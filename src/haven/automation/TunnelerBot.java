@@ -434,10 +434,10 @@ public class TunnelerBot extends Window implements Runnable {
         }
         for (Gob gob : gobs) {
             if (TileStatic.SUPPORT_MATERIALS.contains(gob.getres().basename())) {
-                PBotUtils.pfmovegob(gui.ui, gob);
+                PBotUtils.pfRightClick(gui.ui, gob, 1);
 //                AUtils.waitPf(gui);
 
-                gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
+//                gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
                 sleep(2000);
                 return;
             }
