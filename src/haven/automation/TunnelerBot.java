@@ -22,6 +22,7 @@ import haven.purus.pbot.PBotUtils;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -184,8 +185,8 @@ public class TunnelerBot extends Window implements Runnable {
                         }
                     }
 
+                    debug("stage " + stage);
                     if (stage == 0) {
-                        debug("stage " + stage);
                         columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());
                         if (columns.isEmpty()) {
                             gui.error("No column nearby.");
@@ -222,22 +223,18 @@ public class TunnelerBot extends Window implements Runnable {
                         }
 
                     } else if (stage == 1) {
-                        debug("stage " + stage);
                         //mine forward
                         if (mineLine(currentAnchorColumn, direction, 10, true))
                             stage = 0;
                     } else if (stage == 2) {
-                        debug("stage " + stage);
                         //mine to the side
                         if (mineLine(currentAnchorColumn, directionPerpendicular, mineToTheLeft ? 10 : 1, false))
                             stage = 0;
                     } else if (stage == 3) {
-                        debug("stage " + stage);
                         //mine to the other side
                         if (mineLine(currentAnchorColumn, directionPerpendicular.inv(), 12, false))
                             stage = 0;
                     } else if (stage == 4) {
-                        debug("stage " + stage);
                         //building phase
 
                         //check if we need to build milestone
@@ -259,10 +256,8 @@ public class TunnelerBot extends Window implements Runnable {
                             }
                         }
                     } else if (stage == 5) {
-                        debug("stage " + stage);
                         buildMilestone();
                     } else if (stage == -1) {
-                        debug("stage " + stage);
                         fleeInOppositeDirection();
                     }
                 }
@@ -291,7 +286,7 @@ public class TunnelerBot extends Window implements Runnable {
 //            AUtils.waitPf(gui);
             //Mine spot
             AUtils.clickUiButton("paginae/act/mine", gui);
-            gui.map.wdgmsg("sel", newMilestonePos.div(11), newMilestonePos.div(11), 0);
+            gui.map.wdgmsg("sel", newMilestonePos.floor(MCache.tilesz), newMilestonePos.floor(MCache.tilesz), 0);
             int timeout = 0;
             while (timeout < 100 && !AUtils.getTileName(newMilestonePos, map).equals("mine")) {
                 timeout++;
@@ -322,7 +317,7 @@ public class TunnelerBot extends Window implements Runnable {
                 sleep(500);
 
                 //Walk to CCC with milestone on cursor
-                gui.map.wdgmsg("place", new Coord2d(currentAnchorColumn.x, currentAnchorColumn.y).floor(posres), milestoneRot, 1, 2);
+                gui.map.wdgmsg("place", currentAnchorColumn.floor(posres), milestoneRot, 1, 2);
                 int timeout = 0;
                 while (gui.map.player().rc.dist(currentAnchorColumn) > 11 && timeout < 100) {
                     timeout++;
@@ -390,7 +385,7 @@ public class TunnelerBot extends Window implements Runnable {
 //            AUtils.waitPf(gui);
 
             AUtils.clickUiButton("paginae/act/mine", gui);
-            gui.map.wdgmsg("sel", columnCoord.add(columnOffset).div(11), columnCoord.add(columnOffset).div(11), 0);
+            gui.map.wdgmsg("sel", columnCoord.add(columnOffset).floor(MCache.tilesz), columnCoord.add(columnOffset).floor(MCache.tilesz), 0);
             int timeout = 0;
             while (timeout < 100 && !AUtils.getTileName(columnCoord.add(columnOffset), map).equals("mine")) {
                 timeout++;
@@ -436,6 +431,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean checkIfConstructed(String name) {
+        debug("check " + name);
         List<Gob> colmns = PBotGobAPI.findObjectsByNames(gui.ui, name).stream().map(r -> r.gob).collect(Collectors.toList());
         return AUtils.closestGob(colmns, gui.map.player().rc).rc.dist(gui.map.player().rc) < 20;
     }
@@ -445,7 +441,7 @@ public class TunnelerBot extends Window implements Runnable {
         List<Gob> gobs = AUtils.getAllGobs(gui);
         Coord2d playerC = gui.map.player().rc;
         try {
-            gobs.sort((gob1, gob2) -> (int) (gob1.rc.dist(playerC) - gob2.rc.dist(playerC)));
+            gobs.sort(Comparator.comparingDouble(gob -> gob.rc.dist(playerC)));
         } catch (Exception e) {
             //Illegal argument exception wtf?
         }
@@ -481,7 +477,7 @@ public class TunnelerBot extends Window implements Runnable {
                 rocksAmount++;
             }
         }
-        debug("rocks " + rocksAmount);
+        debug("rocks " + rocksAmount + " of " + num);
         return rocksAmount > num || gui.maininv.getFreeSpace() == 0;
     }
 
@@ -503,6 +499,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean checkLineMined(Coord2d place, Coord dir, int length) {
+        debug("checkLineMined " + place + " " + dir + " " + length );
         for (int i = 0; i <= length; i++) {
             Coord dirmul = dir.mul(11).mul(i);
             if (!AUtils.getTileName(place.add(dirmul), map).equals("mine")) {
@@ -513,6 +510,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean mineLine(Coord2d place, Coord dir, int length, boolean last) throws InterruptedException {
+        debug("mineline " + place + " " + dir + " " + length + " " + last);
         Coord end = dir.mul(11).mul(length);
         Coord dirmul;
         Coord2d mineplace = new Coord2d(0, 0);
@@ -524,10 +522,11 @@ public class TunnelerBot extends Window implements Runnable {
                 tilesToMine++;
             }
         }
+        debug("tilesToMine " + tilesToMine);
         if (tilesToMine > 0) {
             AUtils.clickUiButton("paginae/act/mine", gui);
             if (!((PBotGobAPI.player(ui).getPoses().contains("pickan") || PBotGobAPI.player(ui).getPoses().contains("choppan")) || PBotGobAPI.player(ui).getPoses().contains("drinkan"))) {
-                gui.map.wdgmsg("sel", place.div(11), place.add(end).div(11), 0);
+                gui.map.wdgmsg("sel", place.floor(MCache.tilesz), place.add(end).floor(MCache.tilesz), 0);
             }
             sleep(500);
             return false;
@@ -541,6 +540,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean isClearPath(Coord2d fromd, Coord2d tod) {
+        debug("isClearPath " + fromd + " " + tod);
         Coord2d direction = tod.sub(fromd);
         double dirLen = fromd.dist(tod);
         if (dirLen < 21) {
@@ -563,7 +563,7 @@ public class TunnelerBot extends Window implements Runnable {
             return true;
         } else if (currentAnchorColumn.dist(gui.map.player().rc) < 22) {
             AUtils.clickUiButton("paginae/act/mine", gui);
-            gui.map.wdgmsg("sel", gui.map.player().rc.div(11), currentAnchorColumn.div(11), 0);
+            gui.map.wdgmsg("sel", gui.map.player().rc.floor(MCache.tilesz), currentAnchorColumn.floor(MCache.tilesz), 0);
             sleep(500);
             return true;
         } else {
@@ -596,6 +596,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private void changeDirection(int dir) {
+        debug("changedir " + dir);
         if (dir == 1) {
             resetParams();
             miningDirectionLabel.settext("N");
@@ -624,6 +625,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private void resetParams() {
+        debug("resetparam");
         map = gui.map.glob.map;
         stage = 0;
         columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());

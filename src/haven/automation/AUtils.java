@@ -198,8 +198,7 @@ public class AUtils {
 
     public static String getTileName(Coord2d coord, MCache mcache) {
         try {
-            Coord c = new Coord((int) (coord.x / 11), (int) (coord.y / 11)).add(-1, -1);
-            int t = mcache.gettile(c);
+            int t = mcache.gettile(coord.floor(MCache.tilesz));
             Resource res = mcache.tilesetr(t);
             if (res == null)
                 return "";
