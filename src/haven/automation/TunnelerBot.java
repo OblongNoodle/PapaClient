@@ -249,7 +249,6 @@ public class TunnelerBot extends Window implements Runnable {
                             Coord2d nextColumnPos = currentAnchorColumn.add(nextColumnAdd);
                             if (checkForNearbyColumn(nextColumnPos)) {
                                 pfL(nextColumnPos);
-//                                AUtils.waitPf(gui);
                                 stage = 0;
                             } else {
 //                                System.out.println("build next");
@@ -277,19 +276,17 @@ public class TunnelerBot extends Window implements Runnable {
         Coord addcoord = new Coord(0, 0).sub(directionPerpendicular).mul(11);
         Coord2d newMilestonePos = currentAnchorColumn.add(addcoord);
 
-
         if (closestMilestone.rc.dist(currentAnchorColumn) < 5 * 11) {
             stage = 0;
         }
         //mine tile where we put milestone
-        else if (!AUtils.getTileName(newMilestonePos, map).equals("mine")) {
+        else if (!TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(newMilestonePos, map))) {
             pfL(currentAnchorColumn.add(direction.mul(11)));
-//            AUtils.waitPf(gui);
             //Mine spot
             AUtils.clickUiButton("paginae/act/mine", gui);
             gui.map.wdgmsg("sel", newMilestonePos.floor(MCache.tilesz), newMilestonePos.floor(MCache.tilesz), 0);
             int timeout = 0;
-            while (timeout < 100 && !AUtils.getTileName(newMilestonePos, map).equals("mine")) {
+            while (timeout < 100 && !TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(newMilestonePos, map))) {
                 timeout++;
                 sleep(100);
             }
@@ -341,7 +338,6 @@ public class TunnelerBot extends Window implements Runnable {
         } else {
             Coord2d milestonevision = closestMilestone.rc.add(directionPerpendicular.x * 11, directionPerpendicular.y * 11);
             pfL(milestonevision);
-//            AUtils.waitPf(gui);
             AUtils.leftClick(gui, milestonevision);
             Thread.sleep(100);
             while (gui.map.player().getv() > 0 && !isClearPath(playercood, closestMilestone.rc.add(new Coord2d(directionPerpendicular).mul(5)))) {
@@ -380,15 +376,14 @@ public class TunnelerBot extends Window implements Runnable {
             constructions.sort((gob1, gob2) -> (int) (gob1.rc.dist(gui.map.player().rc) - gob2.rc.dist(gui.map.player().rc)));
         } catch (Exception ignored) {
         }
-        if (!AUtils.getTileName(columnCoord.add(columnOffset), map).equals("mine")) {
+        if (!TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(columnCoord.add(columnOffset), map))) {
             debug("mine for construction");
             pfL(columnCoord);
-//            AUtils.waitPf(gui);
 
             AUtils.clickUiButton("paginae/act/mine", gui);
             gui.map.wdgmsg("sel", columnCoord.add(columnOffset).floor(MCache.tilesz), columnCoord.add(columnOffset).floor(MCache.tilesz), 0);
             int timeout = 0;
-            while (timeout < 100 && !AUtils.getTileName(columnCoord.add(columnOffset), map).equals("mine")) {
+            while (timeout < 100 && !TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(columnCoord.add(columnOffset), map))) {
                 timeout++;
                 sleep(100);
             }
@@ -398,7 +393,6 @@ public class TunnelerBot extends Window implements Runnable {
             debug("continue construction");
             if (!AUtils.hasWnd("Stone Column", gui)) {
                 pfL(columnCoord);
-//            AUtils.waitPf(gui);
                 Gob closeConstr = constructions.get(0);
                 gui.map.wdgmsg("click", Coord.z, closeConstr.rc.floor(posres), 3, 0, 0, (int) closeConstr.id, closeConstr.rc.floor(posres), 0, -1);
                 sleep(1000);
@@ -408,7 +402,6 @@ public class TunnelerBot extends Window implements Runnable {
         } else {
             debug("new construction");
             pfL(columnCoord);
-//            AUtils.waitPf(gui);
             AUtils.clickUiButton("paginae/bld/column", gui);
             sleep(300);
             Coord2d buildPos = new Coord2d(columnCoord.add(columnOffset).x, columnCoord.add(columnOffset).y);
@@ -451,7 +444,6 @@ public class TunnelerBot extends Window implements Runnable {
                 Coord2d tc = new Coord2d(gob.rc.floor(MCache.tilesz)).mul(MCache.tilesz).add(MCache.tilesz.div(2, 2));
                 debug("pf " + gob.getres());
                 pfL(tc);
-//                AUtils.waitPf(gui);
                 sleep(100);
 
                 debug("collect " + gob.getres());
@@ -535,7 +527,6 @@ public class TunnelerBot extends Window implements Runnable {
             if (!last) {
                 pfL(currentAnchorColumn);
             }
-//            AUtils.waitPf(gui);
             return true;
         }
     }
@@ -558,9 +549,8 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean goToNearestColumn() throws InterruptedException {
-        if (AUtils.getTileName(currentAnchorColumn, map).equals("mine")) {
+        if (TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(currentAnchorColumn, map))) {
             pfL(currentAnchorColumn);
-//            AUtils.waitPf(gui);
             return true;
         } else if (currentAnchorColumn.dist(gui.map.player().rc) < 22) {
             AUtils.clickUiButton("paginae/act/mine", gui);
@@ -578,17 +568,15 @@ public class TunnelerBot extends Window implements Runnable {
             columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());
             Gob centerColumn = AUtils.closestGob(columns, gui.map.player().rc);
             currentAnchorColumn = centerColumn.rc.add(new Coord(direction).add(directionPerpendicular).mul(11));
-            if (AUtils.getTileName(currentAnchorColumn, map).equals("mine")) {
+            if (TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(currentAnchorColumn, map))) {
                 Thread.sleep(500);
                 pfL(currentAnchorColumn.sub(direction.mul(2 * 11)));
-//                AUtils.waitPf(gui);
                 Coord addDirection = direction.inv().mul(11).mul(12);
 
                 centerColumn = AUtils.closestGob(columns, currentAnchorColumn.add(addDirection));
 
                 currentAnchorColumn = centerColumn.rc.add(new Coord(direction).add(directionPerpendicular).mul(11));
                 pfL(currentAnchorColumn.sub(direction.mul(2 * 11)));
-//                AUtils.waitPf(gui);
             } else {
                 gui.error("PANIC! Cannot find a path to flee.");
             }
@@ -666,10 +654,12 @@ public class TunnelerBot extends Window implements Runnable {
         gui.debuglog.append(str, Color.WHITE);
     }
 
-    private void pfL(Coord2d c) {
+    private void pfL(Coord2d c) throws InterruptedException {
         FlowerMenu.setNextSelection();
         gui.map.showSpecialMenu(c);
+        debug("pf to " + c);
         PBotUtils.pfLeftClick(gui.ui, c.x, c.y);
+        sleep(100);
     }
 }
 
