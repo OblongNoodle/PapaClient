@@ -47,6 +47,25 @@ public class PBotInventory {
         return items;
     }
 
+    public List<PBotItem> getInventoryContentsDontStack() {
+        List<PBotItem> items = new ArrayList<>();
+        for (Widget witm = inv.child; witm != null; witm = witm.next) {
+            synchronized (witm) {
+                if (witm instanceof WItem) {
+                    WItem witem = (WItem) witm;
+
+                    PBotItem item = new PBotItem(witem);
+                    if (item.isStack()) {
+                        items.addAll(item.getStackContents());
+                    } else {
+                        items.add(item);
+                    }
+                }
+            }
+        }
+        return items;
+    }
+
     /**
      * Returns a list of items with specific regex pattern(s) from the inventory
      *

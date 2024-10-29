@@ -8,6 +8,7 @@ import haven.Coord2d;
 import haven.Drawable;
 import haven.FlowerMenu;
 import haven.GAttrib;
+import haven.GItem;
 import haven.GameUI;
 import haven.Gob;
 import haven.IMeter;
@@ -25,6 +26,7 @@ import haven.purus.pbot.PBotGob;
 import haven.purus.pbot.PBotInventory;
 import haven.purus.pbot.PBotItem;
 import haven.purus.pbot.PBotUtils;
+import haven.res.ui.stackinv.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,6 +61,22 @@ public class AUtils {
         new PBotItem(wItem).activateItem();
 //        wItem.item.wdgmsg("iact", Coord.z, gui.ui.modflags());
 //        gui.ui.rcvr.rcvmsg(gui.ui.lastid+1, "cl", index, gui.ui.modflags());
+    }
+
+    public static List<WItem> getAllContentsWindows(GameUI gui) {
+        List<WItem> itemsInStacks = new ArrayList<>();
+        for (Widget wdg = gui.lchild; wdg != null; wdg = wdg.prev) {
+            if (wdg instanceof GItem.ContentsWindow) {
+                GItem.ContentsWindow contentsWindow = (GItem.ContentsWindow) wdg;
+                if ((contentsWindow.inv instanceof ItemStack)) {
+                    ItemStack stack = (ItemStack) contentsWindow.inv;
+                    for (Map.Entry<GItem, WItem> entry : stack.wmap.entrySet()) {
+                        itemsInStacks.add(entry.getValue());
+                    }
+                }
+            }
+        }
+        return itemsInStacks;
     }
 
     public static void clearhand(GameUI gui) {

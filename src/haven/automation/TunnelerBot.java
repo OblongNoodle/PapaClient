@@ -420,7 +420,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean checkIfConstructed(String name) {
-        List<Gob> colmns = AUtils.getGobs(name, gui);
+        List<Gob> colmns = PBotGobAPI.findObjectsByNames(gui.ui, name).stream().map(r -> r.gob).collect(Collectors.toList());
         return AUtils.closestGob(colmns, gui.map.player().rc.floor()).rc.dist(gui.map.player().rc) < 20;
     }
 
@@ -461,7 +461,7 @@ public class TunnelerBot extends Window implements Runnable {
                 rocksAmount++;
             }
         }
-        for (WItem wItem : PBotUtils.getallInventoryContents(ui)) {
+        for (WItem wItem : AUtils.getAllContentsWindows(gui)) {
             if (TileStatic.SUPPORT_MATERIALS.contains(wItem.item.getres().basename())) {
                 rocksAmount++;
             }
