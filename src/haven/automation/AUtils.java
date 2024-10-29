@@ -196,9 +196,9 @@ public class AUtils {
         return gobs;
     }
 
-    public static String getTileName(Coord coord, MCache mcache) {
+    public static String getTileName(Coord2d coord, MCache mcache) {
         try {
-            Coord c = new Coord(coord.x / 11, coord.y / 11).add(-1, -1);
+            Coord c = new Coord((int) (coord.x / 11), (int) (coord.y / 11)).add(-1, -1);
             int t = mcache.gettile(c);
             Resource res = mcache.tilesetr(t);
             if (res == null)
@@ -219,19 +219,25 @@ public class AUtils {
         }
     }
 
-    public static void activateSign(String name, GameUI gui) {
+    public static boolean activateSign(String name, GameUI gui) {
         Window w = gui.getwnd(name);
         if (w != null) {
             for (Widget wi = w.lchild; wi != null; wi = wi.prev) {
                 if (wi instanceof Button) {
                     ((Button) wi).click();
+                    return (true);
                 }
             }
         }
+        return (false);
     }
 
-    public static void leftClick(GameUI gui, Coord c) {
-        gui.map.wdgmsg("click", Coord.z, new Coord2d(c.x, c.y).floor(posres), 1, 0);
+    public static boolean hasWnd(String name, GameUI gui) {
+        return (gui.getwnd(name) != null);
+    }
+
+    public static void leftClick(GameUI gui, Coord2d c) {
+        gui.map.wdgmsg("click", Coord.z, c.floor(posres), 1, 0);
     }
 
     public static ArrayList<Gob> getGobsInSelectionStartingWith(String name, Coord start, Coord end, GameUI gui) {
@@ -367,7 +373,7 @@ public class AUtils {
         int count = 0;
         for (int x = start.x + 5; x < end.x; x += 11) {
             for (int y = start.y + 5; y < end.y; y += 11) {
-                String tilename = getTileName(new Coord(x, y), gui.map.glob.map);
+                String tilename = getTileName(new Coord2d(x, y), gui.map.glob.map);
                 if (name.equals(tilename)) {
                     count++;
                 }
@@ -542,12 +548,12 @@ public class AUtils {
         return gobs;
     }
 
-    public static Gob closestGob(List<Gob> gobs, Coord c) {
+    public static Gob closestGob(List<Gob> gobs, Coord2d c) {
         if (gobs.isEmpty())
             return null;
         Gob closestGob = gobs.get(0);
         for (Gob gob : gobs) {
-            if (gob.rc.floor().dist(c) < closestGob.rc.floor().dist(c))
+            if (gob.rc.dist(c) < closestGob.rc.dist(c))
                 closestGob = gob;
         }
         return closestGob;

@@ -2763,16 +2763,16 @@ public class MapView extends PView implements DTarget, Console.Directory, PFList
 
                 if (inf == null) {
                     if (Config.pf && clickb == 1 && curs != null && !curs.name.equals("gfx/hud/curs/study")) {
-                        if (pfdefer != null) {
+                        /*if (pfdefer != null) {
                             pfdefer.cancel();
                             pfdefer = null;
-                        }
-                        pfdefer = glob.loader.defer(() -> {
+                        }*/
+                        /*pfdefer = glob.loader.defer(() -> {
                             pathto(mc);
                             pfdefer = null;
                             return (null);
-                        });
-                        //      purusPfLeftClick(mc.floor(), null);
+                        });*/
+                        purusPfLeftClick(mc.floor(), null);
                     } else if (clickb == 1 && ui.modmeta && ui.gui.vhand == null && curs != null && curs.name.equals("gfx/hud/curs/arw")) {
                         //Queued movement
                         movequeue.add(mc);
@@ -2853,8 +2853,8 @@ public class MapView extends PView implements DTarget, Console.Directory, PFList
                         }
                     } else if (Config.pf && curs != null && !curs.name.equals("gfx/hud/curs/study") && gob != null) {
                         if (clickb == 3) {
-                            //  purusPfRightClick(gob, (int) args[8], clickb, 0, null);
-                            if (pfdefer != null) {
+                            purusPfRightClick(gob, -1, 3, 0, null);
+                            /*if (pfdefer != null) {
                                 pfdefer.cancel();
                                 pfdefer = null;
                             }
@@ -2862,9 +2862,10 @@ public class MapView extends PView implements DTarget, Console.Directory, PFList
                                 pathtoRightClick(gob, 0);
                                 pfdefer = null;
                                 return (null);
-                            });
+                            });*/
                         } else if (clickb == 1) {
-                            if (pfdefer != null) {
+                            purusPfLeftClick(gob.rc, null);
+                            /*if (pfdefer != null) {
                                 pfdefer.cancel();
                                 pfdefer = null;
                             }
@@ -2872,7 +2873,7 @@ public class MapView extends PView implements DTarget, Console.Directory, PFList
                                 pathto(gob);
                                 pfdefer = null;
                                 return (null);
-                            });
+                            });*/
                         }
                     } else {
                         args = Utils.extend(args, gobargs);
