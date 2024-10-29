@@ -22,6 +22,7 @@ import haven.purus.pbot.PBotUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static haven.OCache.posres;
 import static java.lang.Thread.sleep;
@@ -44,7 +45,7 @@ public class TunnelerBot extends Window implements Runnable {
     private MCache map;
     private final GameUI gui;
     private boolean stop;
-    private ArrayList<Gob> columns = new ArrayList<>();
+    private List<Gob> columns = new ArrayList<>();
 
     private int stage;
     private Coord currentAnchorColumn;
@@ -182,7 +183,7 @@ public class TunnelerBot extends Window implements Runnable {
                     }
 
                     if (stage == 0) {
-                        columns = AUtils.getGobs("gfx/terobjs/column", gui);
+                        columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());
                         if (columns.isEmpty()) {
                             gui.error("No column nearby.");
                             resetParams();
@@ -233,7 +234,7 @@ public class TunnelerBot extends Window implements Runnable {
                         //building phase
 
                         //check if we need to build milestone
-                        ArrayList<Gob> milestones = AUtils.getGobs("gfx/terobjs/road/milestone-stone-m", gui);
+                        List<Gob> milestones = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/road/milestone-stone-m").stream().map(p -> p.gob).collect(Collectors.toList());
                         Coord2d playercood = gui.map.player().rc;
                         Gob closestMilestone = AUtils.closestGob(milestones, playercood.floor());
                         if (autoRoadActive && closestMilestone != null && closestMilestone.rc.floor().dist(currentAnchorColumn) > 19 * 11) {
@@ -265,7 +266,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private void buildMilestone() throws InterruptedException {
-        ArrayList<Gob> milestones = AUtils.getGobs("gfx/terobjs/road/milestone-stone-m", gui);
+        List<Gob> milestones = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/road/milestone-stone-m").stream().map(p -> p.gob).collect(Collectors.toList());
         Coord2d playercood = gui.map.player().rc;
         Gob closestMilestone = AUtils.closestGob(milestones, playercood.floor());
         Coord addcoord = new Coord(0, 0).sub(directionPerpendicular).mul(11);
@@ -354,7 +355,7 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean checkForNearbyColumn(Coord pos) {
-        columns = AUtils.getGobs("gfx/terobjs/column", gui);
+        columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());
         for (Gob gob : columns) {
             if (gob.rc.floor().dist(pos) < 44) {
                 return true;
@@ -368,7 +369,7 @@ public class TunnelerBot extends Window implements Runnable {
         Coord addCoord = direction.mul(11).mul(10);
         Coord columnCoord = fromCenter.add(addCoord);
         Coord columnOffset = directionPerpendicular.inv().mul(11);
-        ArrayList<Gob> constructions = AUtils.getGobs("gfx/terobjs/consobj", gui);
+        List<Gob> constructions = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/consobj").stream().map(p -> p.gob).collect(Collectors.toList());
         try {
             constructions.sort((gob1, gob2) -> (int) (gob1.rc.dist(gui.map.player().rc) - gob2.rc.dist(gui.map.player().rc)));
         } catch (Exception ignored) {
@@ -419,12 +420,12 @@ public class TunnelerBot extends Window implements Runnable {
     }
 
     private boolean checkIfConstructed(String name) {
-        ArrayList<Gob> colmns = AUtils.getGobs(name, gui);
+        List<Gob> colmns = AUtils.getGobs(name, gui);
         return AUtils.closestGob(colmns, gui.map.player().rc.floor()).rc.dist(gui.map.player().rc) < 20;
     }
 
     private void findRocks() throws InterruptedException {
-        ArrayList<Gob> gobs = AUtils.getAllGobs(gui);
+        List<Gob> gobs = AUtils.getAllGobs(gui);
         Coord2d playerC = gui.map.player().rc;
         try {
             gobs.sort((gob1, gob2) -> (int) (gob1.rc.dist(playerC) - gob2.rc.dist(playerC)));
@@ -433,7 +434,7 @@ public class TunnelerBot extends Window implements Runnable {
         }
         for (Gob gob : gobs) {
             if (TileStatic.SUPPORT_MATERIALS.contains(gob.getres().basename())) {
-                PBotUtils.pfLeftClick(gui.ui, gob.rc.floor());
+                PBotUtils.pfmovegob(gui.ui, gob);
 //                AUtils.waitPf(gui);
 
                 gui.map.wdgmsg("click", Coord.z, gob.rc.floor(posres), 3, 1, 0, (int) gob.id, gob.rc.floor(posres), 0, -1);
@@ -555,7 +556,7 @@ public class TunnelerBot extends Window implements Runnable {
 
     private void fleeInOppositeDirection() {
         try {
-            columns = AUtils.getGobs("gfx/terobjs/column", gui);
+            columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());
             Gob centerColumn = AUtils.closestGob(columns, gui.map.player().rc.floor());
             currentAnchorColumn = centerColumn.rc.floor().add(new Coord(direction).add(directionPerpendicular).mul(11));
             if (AUtils.getTileName(currentAnchorColumn, map).equals("mine")) {
@@ -607,7 +608,7 @@ public class TunnelerBot extends Window implements Runnable {
     private void resetParams() {
         map = gui.map.glob.map;
         stage = 0;
-        columns = AUtils.getGobs("gfx/terobjs/column", gui);
+        columns = PBotGobAPI.findObjectsByNames(gui.ui, "gfx/terobjs/column").stream().map(p -> p.gob).collect(Collectors.toList());
         Gob centerColumn = AUtils.closestGob(columns, gui.map.player().rc.floor());
         if (centerColumn != null) {
             currentAnchorColumn = centerColumn.rc.floor().add(new Coord(direction).add(directionPerpendicular).mul(11));
