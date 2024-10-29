@@ -12,7 +12,7 @@ public class TileStatic {
     ));
 
     public static final Set<String> MINE_WALKABLE_TILES = new HashSet<>(Arrays.asList(
-            "mine", "gleamgrotto", "wildcavern", "warmdepth", "gloomdark"
+            "mine", "gleamgrotto", "wildcavern", "warmdepth", "gloomdark", "shadehollow"
     ));
 
     public static final Set<String> ORE = new HashSet<>(Arrays.asList(

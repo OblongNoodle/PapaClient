@@ -202,6 +202,7 @@ public class TunnelerBot extends Window implements Runnable {
 
                         //Check lines from column
                         int nextLine = checkLinesMined();
+                        debug("next line " + nextLine);
                         switch (nextLine) {
                             case 0:
                                 stage = 4;
@@ -502,7 +503,7 @@ public class TunnelerBot extends Window implements Runnable {
         debug("checkLineMined " + place + " " + dir + " " + length );
         for (int i = 0; i <= length; i++) {
             Coord dirmul = dir.mul(11).mul(i);
-            if (!AUtils.getTileName(place.add(dirmul), map).equals("mine")) {
+            if (!TileStatic.MINE_WALKABLE_TILES.contains(AUtils.getTileName(place.add(dirmul), map))) {
                 return false;
             }
         }
