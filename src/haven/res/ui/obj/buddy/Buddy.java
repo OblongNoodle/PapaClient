@@ -9,9 +9,9 @@ import haven.GameUI;
 import haven.Gob;
 import haven.Loading;
 import haven.Message;
+import haven.PUtils;
 import haven.PView;
 import haven.Text;
-import haven.Utils;
 
 import java.awt.Color;
 import java.util.Objects;
@@ -80,7 +80,7 @@ public class Buddy extends GAttrib implements InfoPart {
             b = bw.find(id);
         if (b != null) {
             Color col = BuddyWnd.gc[rgrp = b.group];
-            cmp.add(Utils.outline2(Text.std.render(rnm = b.name, col).img, Utils.contrast(col)), Coord.z);
+            cmp.add(PUtils.rasterimg(PUtils.blurmask2(Text.std.render(rnm = b.name, col).img.getRaster(), 1, 1, Color.DARK_GRAY)), Coord.z);
         }
         this.b = b;
     }
