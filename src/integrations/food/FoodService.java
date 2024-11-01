@@ -76,16 +76,17 @@ public class FoodService {
         }
     }*/
 
+    private static double lastModified = -1;
     /**
      * Check last modified for the food_data file and request update from server if too old
      */
     public static void requestFoodDataCache() {
         try {
-            double lastModified = Utils.rtime();//seconds time
             /*if (FOOD_DATA_CACHE_FILE.exists()) {
                 lastModified = FOOD_DATA_CACHE_FILE.lastModified();
             }*/
-            if (Utils.rtime() - lastModified > 30 * 60) {//30 * 60 sec
+            if (lastModified == -1 || (Utils.rtime() - lastModified > 30 * 60)) {//30 * 60 sec
+                lastModified = Utils.rtime();//seconds time
                 try {
                     HttpURLConnection connection = (HttpURLConnection) new URL(FOOD_DATA_URL).openConnection();
                     connection.setRequestProperty("Accept-Encoding", "gzip");
