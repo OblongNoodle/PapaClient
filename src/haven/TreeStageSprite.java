@@ -4,7 +4,7 @@ import java.awt.Color;
 
 
 public class TreeStageSprite extends Sprite {
-    private static final Tex[] treestg = new Tex[100];
+    private static final Tex[] treestg = new Tex[1000];
     private static final Color stagecolor = new Color(115, 255, 25);
     private static final Tex growth = Resource.local().loadwait("gfx/hud/rosters/growth").layer(Resource.imgc).tex();
     public int val;
