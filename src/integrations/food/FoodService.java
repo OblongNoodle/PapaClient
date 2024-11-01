@@ -39,7 +39,7 @@ public class FoodService {
     private static final String DEFAULT_SERVICE_URL = "https://food.cediner.tech/";
     public static final String API_ENDPOINT = Utils.getpref("food_service_endpoint_api", DEFAULT_SERVICE_URL + "api/");
     private static final String FOOD_DATA_URL = Utils.getpref("food_service_data_url", DEFAULT_SERVICE_URL + "api/data/food-info.json");
-    private static final File FOOD_DATA_CACHE_FILE = new File("food_data.json");
+    /*private static final File FOOD_DATA_CACHE_FILE = new File("food_data.json");*/
     private static String token = "ardClient";  //Config.confid maybe ArdClient also works
 
     private static final Map<String, ParsedFoodInfo> cachedItems = new ConcurrentHashMap<>();
@@ -50,7 +50,7 @@ public class FoodService {
         if (!Resource.language.equals("en")) {
             System.out.println("FoodUtil ERROR: Only English language is allowed to send food data");
         }
-        scheduler.execute(FoodService::loadCachedFoodData);
+        /*scheduler.execute(FoodService::loadCachedFoodData);*/
         scheduler.scheduleAtFixedRate(FoodService::sendItems, 10L, 10, TimeUnit.SECONDS);
         scheduler.scheduleAtFixedRate(FoodService::requestFoodDataCache, 0L, 30, TimeUnit.MINUTES);
     }
@@ -58,7 +58,7 @@ public class FoodService {
     /**
      * Load cached food data from the file (only keys for now since we don't use content anyway)
      */
-    private static void loadCachedFoodData() {
+    /*private static void loadCachedFoodData() {
         try {
             if (FOOD_DATA_CACHE_FILE.exists()) {
                 String jsonData = String.join("", Files.readAllLines(FOOD_DATA_CACHE_FILE.toPath(), StandardCharsets.UTF_8));
@@ -74,18 +74,18 @@ public class FoodService {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     /**
      * Check last modified for the food_data file and request update from server if too old
      */
     public static void requestFoodDataCache() {
         try {
-            long lastModified = 0;
-            if (FOOD_DATA_CACHE_FILE.exists()) {
+            double lastModified = Utils.rtime();//seconds time
+            /*if (FOOD_DATA_CACHE_FILE.exists()) {
                 lastModified = FOOD_DATA_CACHE_FILE.lastModified();
-            }
-            if (System.currentTimeMillis() - lastModified > TimeUnit.MINUTES.toMillis(30)) {
+            }*/
+            if (Utils.rtime() - lastModified > 30 * 60) {//30 * 60 sec
                 try {
                     HttpURLConnection connection = (HttpURLConnection) new URL(FOOD_DATA_URL).openConnection();
                     connection.setRequestProperty("Accept-Encoding", "gzip");
@@ -99,7 +99,7 @@ public class FoodService {
                     }
                     String content = stringBuilder.toString();
 
-                    Files.write(FOOD_DATA_CACHE_FILE.toPath(), Collections.singleton(content), StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+                    /*Files.write(FOOD_DATA_CACHE_FILE.toPath(), Collections.singleton(content), StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);*/
                     JSONObject object = new JSONObject(content);
                     object.keySet().forEach(key -> cachedItems.put(key, new ParsedFoodInfo()));
                     System.out.println("Updated food data file: " + cachedItems.size() + " entries");
