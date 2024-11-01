@@ -52,6 +52,8 @@ public class Launch {
         Path path = Paths.get(uri);
         Path dir = path.getParent();
         Path info = dir.resolve("." + path.getFileName() + ".info");
+        if (!Files.exists(info))
+            return (dir);
         try (InputStream src = Files.newInputStream(info)) {
             Files.readAllLines(info, StandardCharsets.UTF_8);
             Properties props = new Properties();
@@ -66,14 +68,27 @@ public class Launch {
 
         Path javadir = Paths.get(javaPath);
 
+        int os = getOsType();
         Path jvm;
-        if (Files.exists(jvm = pj(javadir, "java")))
+        if (os == 1 && Files.exists(jvm = pj(javadir, "java")))
             return (jvm);
-        if (Files.exists(jvm = pj(javadir, "javaw.exe")))
+        if (os == 2 && Files.exists(jvm = pj(javadir, "javaw.exe")))
             return (jvm);
-        if (Files.exists(jvm = pj(javadir, "java.exe")))
+        if (os == 2 && Files.exists(jvm = pj(javadir, "java.exe")))
             return (jvm);
         throw (new IOException("could not find a Java executable"));
+    }
+
+    public static int getOsType() {
+        String osName = System.getProperty("os.name").toLowerCase();
+
+        if (osName.contains("linux")) {
+            return 1;
+        } else if (osName.contains("windows")) {
+            return 2;
+        } else {
+            return 0;
+        }
     }
 
     public static Path pj(Path base, String... els) {
