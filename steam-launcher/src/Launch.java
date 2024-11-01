@@ -33,6 +33,7 @@ public class Launch {
             List<String> jvmopt = new ArrayList<>();
             jvmopt.add(findjvm().toFile().toString());
             jvmopt.add("--add-exports=java.desktop/sun.awt=ALL-UNNAMED");
+            jvmopt.add("-Dsun.java2d.uiScale.enabled=false");
 
             jvmopt.add("-jar");
             jvmopt.add("build/hafen.jar");
