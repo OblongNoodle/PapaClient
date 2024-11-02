@@ -1,0 +1,321 @@
+const PBotAPI = Java.type('haven.purus.pbot.PBotAPI');
+const ui = PBotAPI.ui();
+const PBotUtils = Java.type('haven.purus.pbot.PBotUtils');
+const PBotCharacterAPI = Java.type('haven.purus.pbot.PBotCharacterAPI');
+const PBotGobAPI = Java.type('haven.purus.pbot.PBotGobAPI');
+const PBotWindowAPI = Java.type('haven.purus.pbot.PBotWindowAPI');
+const window = PBotUtils.PBotWindow(ui, "Smelter Bot", 200, 250, ScriptID);
+
+const orePiles = [];
+const coalPiles = [];
+const smelters = [];
+let stop = false;
+let useMoreCoal = false;
+
+window.addButton("btnOre", "Select Ore Zone", 180, 10, 10);
+window.addButton("btnCoal", "Select Coal Zone", 180, 10, 40);
+window.addButton("btnSmelter", "Select Smelter Zone", 180, 10, 70);
+const moreCoalCheck = window.addCheckbox("moreCoal", "Use 12 coal (9 if unchecked)", false, 10, 100);
+window.addButton("btnStart", "Start Smelting", 180, 10, 130);
+window.addButton("btnStop", "Stop", 50, 10, 160);
+
+function shouldStop() {
+    if (PBotCharacterAPI.getEnergy(ui) <= 22) PBotUtils.sysMsg(ui, "Not enough energy!");
+    if (stop) PBotUtils.sysMsg(ui, "Stop!");
+    if (window.closed()) PBotUtils.sysMsg(ui, "Window closed!");
+    return stop || window.closed() || PBotCharacterAPI.getEnergy(ui) <= 22;
+}
+
+const btnStop = () => {
+    stop = true;
+    PBotUtils.stop();
+};
+
+const moreCoal = () => {
+    useMoreCoal = !useMoreCoal;
+};
+
+const btnOre = () => {
+    PBotUtils.selectArea(ui);
+    const gobs = PBotUtils.gobsInArea(ui, PBotUtils.getSelectedAreaA(), PBotUtils.getSelectedAreaB());
+    for(let i=0; i<gobs.size(); i++) {
+        if(gobs[i].getResname() === 'gfx/terobjs/stockpile-ore')
+            orePiles.push(gobs[i]);
+    }
+    PBotUtils.sysMsg(ui, "Ore piles selected: " + orePiles.length);
+};
+
+const btnCoal = () => {
+    PBotUtils.selectArea(ui);
+    const gobs = PBotUtils.gobsInArea(ui, PBotUtils.getSelectedAreaA(), PBotUtils.getSelectedAreaB());
+    for(let i=0; i<gobs.size(); i++) {
+        if(gobs[i].getResname() === 'gfx/terobjs/stockpile-coal')
+            coalPiles.push(gobs[i]);
+    }
+    PBotUtils.sysMsg(ui, "Coal piles selected: " + coalPiles.length);
+};
+
+const btnSmelter = () => {
+    PBotUtils.selectArea(ui);
+    const gobs = PBotUtils.gobsInArea(ui, PBotUtils.getSelectedAreaA(), PBotUtils.getSelectedAreaB());
+    for(let i=0; i<gobs.size(); i++) {
+        if(gobs[i].getResname() === 'gfx/terobjs/smelter')
+            smelters.push(gobs[i]);
+    }
+    PBotUtils.sysMsg(ui, "Smelters selected: " + smelters.length);
+};
+
+const btnStart = () => {
+    try {
+        if (!orePiles.length || !coalPiles.length || !smelters.length) {
+            PBotUtils.sysMsg(ui, "Please select all required zones first!");
+            return;
+        }
+
+        const coalAmount = useMoreCoal ? 12 : 9;
+        stop = false;
+
+        while (!shouldStop()) {
+            const playerInv = PBotUtils.playerInventory(ui);
+
+            // Fill smelters with ore
+            for (const smelter of smelters) {
+                if (shouldStop()) break;
+
+                let smelterFilled = false;
+                while (!shouldStop() && !smelterFilled) {
+                    if (PBotUtils.pfRightClick(ui, smelter, 0)) {
+                        PBotUtils.sleep(1000);
+
+                        while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                            PBotUtils.sleep(25);
+                        }
+
+                        const smelterWindow = PBotWindowAPI.waitForWindow(ui, "Ore Smelter", 2000);
+                        if (smelterWindow) {
+                            let smelterInv = PBotWindowAPI.getInventory(smelterWindow);
+                            if (smelterInv) {
+                                if (smelterInv.freeSlotsInv() === 0) {
+                                    smelterFilled = true;
+                                    continue;
+                                }
+
+                                while (!shouldStop() && smelterInv.freeSlotsInv() > 0) {
+                                    let ores = playerInv.getInventoryItemsByResnames("gfx/invobjs/magnetite");
+                                    if (ores.size() === 0) {
+                                        if (orePiles.length > 0) {
+                                            PBotUtils.pfRightClick(ui, orePiles[0], 0);
+                                            PBotUtils.sleep(1000);
+                                            PBotWindowAPI.waitForWindow(ui, "Stockpile", 2000);
+                                            const slots = playerInv.freeSlotsInv();
+                                            const oreAmount = PBotWindowAPI.getStockpileUsedCapacity(ui);
+                                            if (oreAmount <= slots)
+                                                orePiles.shift();
+                                            PBotWindowAPI.takeItemsFromStockpile(ui, Math.min(slots, oreAmount));
+                                            while (!shouldStop() && playerInv.freeSlotsInv() != Math.max(0, slots - oreAmount)) {
+                                                PBotUtils.sleep(25);
+                                            }
+
+                                            PBotUtils.pfRightClick(ui, smelter, 0);
+                                            PBotUtils.sleep(1000);
+
+                                            const newSmelterWindow = PBotWindowAPI.waitForWindow(ui, "Ore Smelter", 2000);
+                                            if (newSmelterWindow) {
+                                                smelterInv = PBotWindowAPI.getInventory(newSmelterWindow);
+                                            }
+                                        } else {
+                                            PBotUtils.sysMsg(ui, "Out of ore piles!");
+                                            return;
+                                        }
+                                    }
+
+                                    ores = playerInv.getInventoryItemsByResnames("gfx/invobjs/magnetite");
+                                    if (ores.size() > 0) {
+                                        ores[0].transferItem(-1);
+                                        PBotUtils.sleep(250);
+                                    }
+
+                                    if (smelterInv.freeSlotsInv() === 0) {
+                                        smelterFilled = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Handle any remaining ore before moving to coal
+            const remainingOre = playerInv.getInventoryItemsByResnames("gfx/invobjs/magnetite");
+            if (remainingOre.size() > 0) {
+                PBotUtils.sysMsg(ui, "Returning remaining ore to stockpiles");
+                if (orePiles.length > 0) {
+                    // Put ore in existing stockpile
+                    PBotUtils.pfRightClick(ui, orePiles[0], 0);
+                    PBotUtils.sleep(1000);
+                    const stockpileWindow = PBotWindowAPI.waitForWindow(ui, "Stockpile", 2000);
+                    if (stockpileWindow) {
+                        remainingOre[0].transferItem(-1);  // Transfer all ore
+                        PBotUtils.sleep(250);
+                    }
+                } else {
+                    // Create new stockpile with remaining ore
+                    remainingOre[0].takeItem(1);  // Take one ore to create stockpile
+                    PBotUtils.sleep(250);
+
+                    if (PBotUtils.getItemAtHand(ui) != null) {
+                        PBotUtils.makePile(ui);  // Make the stockpile
+                        PBotUtils.sleep(1000);
+
+                        // Find the newly created stockpile
+                        const newPile = PBotGobAPI.findGobByResname(ui, "gfx/terobjs/stockpile-ore");
+                        if (newPile) {
+                            orePiles.push(newPile);
+                            // Transfer remaining ore
+                            remainingOre[0].transferItem(-1);
+                            PBotUtils.sleep(250);
+                        }
+                    }
+                }
+            }
+
+            // Fill smelters with coal
+            const coalTracking = new Array(smelters.length).fill(0);  // Track coal in each smelter
+
+            for (let i = 0; i < smelters.length; i++) {
+                if (shouldStop()) break;
+
+                const smelter = smelters[i];
+                PBotUtils.sysMsg(ui, "Working on smelter " + (i + 1));
+
+                // First move to the smelter
+                PBotUtils.pfRightClick(ui, smelter, 0);
+                PBotUtils.sleep(1000);
+                while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                    PBotUtils.sleep(25);
+                }
+
+                // If we don't have coal on cursor, get it
+                if (PBotUtils.getItemAtHand(ui) == null) {
+                    // Check if we need more coal in inventory
+                    let coal = playerInv.getInventoryItemsByResnames("gfx/invobjs/coal", "gfx/invobjs/blackcoal");
+                    if (coal.size() === 0) {
+                        if (coalPiles.length > 0) {
+                            PBotUtils.sysMsg(ui, "Getting more coal from stockpile");
+                            PBotUtils.pfRightClick(ui, coalPiles[0], 0);
+                            PBotUtils.sleep(1000);
+                            while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                                PBotUtils.sleep(25);
+                            }
+                            PBotWindowAPI.waitForWindow(ui, "Stockpile", 2000);
+                            const slots = playerInv.freeSlotsInv();
+                            const coalAvailable = PBotWindowAPI.getStockpileUsedCapacity(ui);
+                            if (coalAvailable <= slots)
+                                coalPiles.shift();
+                            PBotWindowAPI.takeItemsFromStockpile(ui, Math.min(slots, coalAvailable));
+                            while (!shouldStop() && playerInv.freeSlotsInv() != Math.max(0, slots - coalAvailable)) {
+                                PBotUtils.sleep(25);
+                            }
+
+                            // Move back to smelter after getting coal
+                            PBotUtils.pfRightClick(ui, smelter, 0);
+                            PBotUtils.sleep(1000);
+                            while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                                PBotUtils.sleep(25);
+                            }
+
+                            coal = playerInv.getInventoryItemsByResnames("gfx/invobjs/coal", "gfx/invobjs/blackcoal");
+                        } else {
+                            PBotUtils.sysMsg(ui, "Out of coal piles!");
+                            return;
+                        }
+                    }
+
+                    // Take coal to cursor
+                    coal[0].takeItem(1);
+                    PBotUtils.sleep(250);
+                }
+
+                // Add coal until this smelter is full or we run out
+                while (!shouldStop() && coalTracking[i] < coalAmount) {
+                    // Make sure we're still at the smelter
+                    PBotUtils.pfRightClick(ui, smelter, 0);
+                    PBotUtils.sleep(1000);
+                    while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                        PBotUtils.sleep(25);
+                    }
+
+                    smelter.itemClick(1);  // shift+right-click with coal on cursor
+                    PBotUtils.sleep(250);
+
+                    // If coal disappeared from cursor, we ran out and need more
+                    if (PBotUtils.getItemAtHand(ui) == null) {
+                        let coal = playerInv.getInventoryItemsByResnames("gfx/invobjs/coal", "gfx/invobjs/blackcoal");
+                        if (coal.size() === 0) {
+                            if (coalPiles.length > 0) {
+                                PBotUtils.sysMsg(ui, "Getting more coal from stockpile");
+                                PBotUtils.pfRightClick(ui, coalPiles[0], 0);
+                                PBotUtils.sleep(1000);
+                                while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                                    PBotUtils.sleep(25);
+                                }
+                                PBotWindowAPI.waitForWindow(ui, "Stockpile", 2000);
+                                const slots = playerInv.freeSlotsInv();
+                                const coalAvailable = PBotWindowAPI.getStockpileUsedCapacity(ui);
+                                if (coalAvailable <= slots)
+                                    coalPiles.shift();
+                                PBotWindowAPI.takeItemsFromStockpile(ui, Math.min(slots, coalAvailable));
+                                while (!shouldStop() && playerInv.freeSlotsInv() != Math.max(0, slots - coalAvailable)) {
+                                    PBotUtils.sleep(25);
+                                }
+
+                                // Move back to smelter after getting coal
+                                PBotUtils.pfRightClick(ui, smelter, 0);
+                                PBotUtils.sleep(1000);
+                                while (!shouldStop() && PBotUtils.player(ui).isMoving()) {
+                                    PBotUtils.sleep(25);
+                                }
+
+                                coal = playerInv.getInventoryItemsByResnames("gfx/invobjs/coal", "gfx/invobjs/blackcoal");
+                            } else {
+                                PBotUtils.sysMsg(ui, "Out of coal piles!");
+                                return;
+                            }
+                        }
+                        // Take new coal to cursor
+                        coal[0].takeItem(1);
+                        PBotUtils.sleep(250);
+                    }
+
+                    coalTracking[i]++;
+                    PBotUtils.sysMsg(ui, "Added coal " + coalTracking[i] + " of " + coalAmount + " to smelter " + (i + 1));
+                }
+            }
+
+            // Light smelters
+            const brazier = PBotGobAPI.findGobByName(ui, "gfx/terobjs/brazier");
+            if (brazier) {
+                const torch = playerInv.getInventoryItemsByNames('Torch');
+                if (torch.size() > 0) {
+                    const torchItem = torch[0];
+                    PBotUtils.pfRightClick(ui, brazier, 0);
+                    PBotUtils.sleep(1000);
+
+                    for (const smelter of smelters) {
+                        if (shouldStop()) break;
+                        PBotUtils.altLeftClick(ui, smelter);
+                        PBotUtils.rightClick(ui, smelter);
+                        PBotUtils.sleep(10000);
+                    }
+                }
+            }
+
+            break;
+                    }
+
+                } catch (e) {
+                    PBotUtils.sysMsg(ui, e.toString(), 255, 128, 128);
+                    throw e;
+                }
+            };

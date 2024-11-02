@@ -1,0 +1,125 @@
+const PBotAPI = Java.type('haven.purus.pbot.PBotAPI');
+const ui = PBotAPI.ui();
+const PBotUtils = Java.type('haven.purus.pbot.PBotUtils');
+const window = PBotUtils.PBotWindow(ui, "Stone/Ore Marker", 180, 180, ScriptID);
+
+let stop = false;
+
+// Trying completely different values
+window.addLabel("NOT WORKING:", 10, 10);
+const generalInput = window.addTextEntry(50, 10, 20, 20);  // Starting with zero positions to see what happens
+
+window.addLabel("NOT WORKING:", 10, 60);
+const coadeInput = window.addTextEntry(50, 10, 70, 20);  // 50 pixels down
+
+window.addLabel("NOT WORKING:", 10, 110);
+const feldsparInput = window.addTextEntry(50, 10, 120, 20);  // 100 pixels down
+
+// Buttons at bottom
+window.addButton("btnStop", "Stop", 40, 10, 150);
+window.addButton("btnStart", "Start Marking", 90, 60, 150);
+
+// Stone type categorization
+const STONE_TYPES = {
+   general: [
+       "gfx/invobjs/basalt",
+       "gfx/invobjs/limestone",
+       "gfx/invobjs/sandstone",
+       "gfx/invobjs/schist",
+       "gfx/invobjs/gneiss",
+       "gfx/invobjs/granite",
+       "gfx/invobjs/marble",
+       "gfx/invobjs/greenschist"
+   ],
+   coade: [
+       "gfx/invobjs/flint",
+       "gfx/invobjs/quartz"
+   ],
+   feldspar: [
+       "gfx/invobjs/feldspar"
+   ],
+   ore: [  // Kept separate in case you want different handling
+       "gfx/invobjs/cassiterite",
+       "gfx/invobjs/chalcopyrite",
+       "gfx/invobjs/malachite",
+       "gfx/invobjs/ilmenite",
+       "gfx/invobjs/limonite",
+       "gfx/invobjs/hematite",
+       "gfx/invobjs/magnetite"
+   ]
+};
+
+function shouldStop() {
+   if (stop) PBotUtils.sysMsg(ui, "Stop!");
+   if (window.closed()) PBotUtils.sysMsg(ui, "Window closed!");
+   return stop || window.closed();
+}
+
+const btnStop = () => {
+   stop = true;
+   PBotUtils.stop();
+};
+
+const btnStart = () => {
+   try {
+       stop = false;
+       let lastCheck = new Set();
+
+       // Get threshold values
+       const generalThreshold = parseFloat(generalInput.getText()) || 200;
+       const coadeThreshold = parseFloat(coadeInput.getText()) || 150;
+       const feldsparThreshold = parseFloat(feldsparInput.getText()) || 250;
+
+       // Validate inputs
+       if (isNaN(generalThreshold) || isNaN(coadeThreshold) || isNaN(feldsparThreshold)) {
+           PBotUtils.sysMsg(ui, "Please enter valid quality numbers!");
+           return;
+       }
+
+       while (!shouldStop()) {
+           const playerInv = PBotUtils.playerInventory(ui);
+           let currentCheck = new Set();
+
+           // Check each category with its threshold
+           for (const [category, stones] of Object.entries(STONE_TYPES)) {
+               const threshold = category === 'general' ? generalThreshold :
+                               category === 'coade' ? coadeThreshold :
+                               category === 'feldspar' ? feldsparThreshold :
+                               0;  // Ore types won't be marked
+
+               for (const resourceName of stones) {
+                   const items = playerInv.getInventoryItemsByResnames(resourceName);
+
+                   for (let i = 0; i < items.size(); i++) {
+                       const item = items[i];
+                       const name = item.getName();
+                       const quality = item.getQuality();
+                       const invLoc = item.getInvLoc();
+
+                       const itemId = `${name}-${quality}-${invLoc.x},${invLoc.y}`;
+                       currentCheck.add(itemId);
+
+                       // If item is new and meets its category's threshold
+                       if (!lastCheck.has(itemId) && quality >= threshold && threshold > 0) {
+                           const player = PBotUtils.player(ui);
+                           const fullName = `${name} Q${quality.toFixed(1)}`;
+
+                           ui.gui.mapfile.markobj(
+                               player.id,
+                               player,
+                               fullName
+                           );
+
+                           PBotUtils.sysMsg(ui, `Marked ${category} stone: ${fullName}`);
+                       }
+                   }
+               }
+           }
+
+           lastCheck = currentCheck;
+           PBotUtils.sleep(1000);
+       }
+   } catch (e) {
+       PBotUtils.sysMsg(ui, "Error: " + e);
+   }
+};
